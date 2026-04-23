@@ -1,0 +1,15 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-products",
+      "schedule": "0 6 * * *"
+    }
+  ],
+  "functions": {
+    "api/cron/sync-products.js": { "maxDuration": 60 },
+    "api/fetch-meta.js": { "maxDuration": 15 }
+  },
+  "rewrites": [
+    { "source": "/brand", "destination": "/brand.html" }
+  ]
+}

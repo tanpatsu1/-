@@ -1,0 +1,10 @@
+{
+  "name": "fashion-brand-manager",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": "20.x" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "cheerio": "^1.0.0"
+  }
+}
