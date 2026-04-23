@@ -1,9 +1,10 @@
 -- ============================================================
 -- Fashion Brand Manager — Supabase Setup SQL
 -- Run this in: Supabase Dashboard → SQL Editor → New Query
+-- Safe to run multiple times (uses IF NOT EXISTS)
 -- ============================================================
 
-CREATE TABLE brands (
+CREATE TABLE IF NOT EXISTS brands (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name          TEXT NOT NULL,
   url           TEXT NOT NULL,
@@ -16,7 +17,7 @@ CREATE TABLE brands (
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id      UUID NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
   name          TEXT NOT NULL,
@@ -28,7 +29,7 @@ CREATE TABLE products (
   CONSTRAINT products_brand_url_unique UNIQUE (brand_id, product_url)
 );
 
-CREATE TABLE cron_log (
+CREATE TABLE IF NOT EXISTS cron_log (
   id             BIGSERIAL PRIMARY KEY,
   ran_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   brands_synced  INT NOT NULL DEFAULT 0,
@@ -36,7 +37,7 @@ CREATE TABLE cron_log (
   errors         JSONB
 );
 
-CREATE INDEX products_brand_id_seen_idx ON products (brand_id, first_seen_at DESC);
+CREATE INDEX IF NOT EXISTS products_brand_id_seen_idx ON products (brand_id, first_seen_at DESC);
 
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
@@ -46,6 +47,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS brands_updated_at ON brands;
 CREATE TRIGGER brands_updated_at
   BEFORE UPDATE ON brands
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
