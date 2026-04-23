@@ -1,9 +1,9 @@
 let _brands = [];
 
 async function loadBrands() {
-  const grid     = document.getElementById('brands-grid');
-  const empty    = document.getElementById('empty-state');
-  const title    = document.getElementById('page-title');
+  const grid  = document.getElementById('brands-grid');
+  const empty = document.getElementById('empty-state');
+  const title = document.getElementById('page-title');
 
   grid.innerHTML = Array(4).fill(
     '<div class="skeleton" style="height:220px;border-radius:10px"></div>'
@@ -11,14 +11,14 @@ async function loadBrands() {
 
   try {
     _brands = await API.get('/api/brands');
-  } catch {
+  } catch (err) {
     grid.innerHTML = '';
-    showToast('Failed to load brands', 'error');
+    showToast(err.message || 'ブランドの読み込みに失敗しました', 'error');
     return;
   }
 
   grid.innerHTML = '';
-  title.textContent = `Brands${_brands.length ? ` (${_brands.length})` : ''}`;
+  title.textContent = `ブランド一覧${_brands.length ? `（${_brands.length}件）` : ''}`;
 
   if (_brands.length === 0) {
     empty.hidden = false;
@@ -51,12 +51,11 @@ function _buildCard(brand) {
       </div>
     </div>
     <div class="brand-card__actions">
-      <button class="btn btn-ghost btn-sm js-edit"   data-id="${brand.id}">Edit</button>
-      <button class="btn btn-danger-ghost btn-sm js-del" data-id="${brand.id}">Delete</button>
+      <button class="btn btn-ghost btn-sm js-edit"   data-id="${brand.id}">編集</button>
+      <button class="btn btn-danger-ghost btn-sm js-del" data-id="${brand.id}">削除</button>
     </div>
   `;
 
-  // Image fallback
   const img = article.querySelector('img');
   if (img) {
     img.addEventListener('error', () => {
@@ -87,13 +86,13 @@ function _buildCard(brand) {
 }
 
 async function _confirmDelete(id, name) {
-  if (!confirm(`Delete "${name}"?\n\nThis will remove all saved products for this brand.`)) return;
+  if (!confirm(`「${name}」を削除しますか？\n\nこのブランドの商品情報もすべて削除されます。`)) return;
   try {
     await API.del(`/api/brands/${id}`);
-    showToast('Brand deleted');
+    showToast('ブランドを削除しました');
     loadBrands();
   } catch {
-    showToast('Failed to delete brand', 'error');
+    showToast('削除に失敗しました', 'error');
   }
 }
 

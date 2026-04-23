@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brand Detail — Brand Manager</title>
+  <title>ブランド詳細 — Brand Manager</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -17,9 +17,9 @@
   </header>
 
   <main class="main-container">
-    <a href="/" class="back-link">← All Brands</a>
+    <a href="/" class="back-link">← ブランド一覧</a>
 
-    <!-- Loading -->
+    <!-- ローディング -->
     <div id="brand-loading">
       <div class="brand-detail-header">
         <div class="skeleton" style="aspect-ratio:4/3;border-radius:10px"></div>
@@ -33,14 +33,14 @@
       </div>
     </div>
 
-    <!-- Error -->
+    <!-- エラー -->
     <div id="brand-error" class="empty-state" hidden>
       <div class="empty-state__icon">🔍</div>
-      <h2 class="empty-state__title">Brand not found</h2>
-      <a href="/" class="btn btn-primary" style="margin-top:8px">← Back to Brands</a>
+      <h2 class="empty-state__title">ブランドが見つかりません</h2>
+      <a href="/" class="btn btn-primary" style="margin-top:8px">← ブランド一覧へ</a>
     </div>
 
-    <!-- Detail -->
+    <!-- 詳細 -->
     <div id="brand-detail" hidden>
       <div class="brand-detail-header">
         <div class="brand-detail-image" id="detail-image-wrap"></div>
@@ -49,81 +49,81 @@
           <div class="brand-detail-meta" id="detail-meta"></div>
           <p class="brand-detail-description" id="detail-description"></p>
           <a class="brand-official-link" id="detail-url" target="_blank" rel="noopener noreferrer" hidden>
-            Official Website ↗
+            公式サイト ↗
           </a>
           <div class="brand-detail-actions">
-            <button class="btn btn-secondary" id="detail-edit-btn">Edit</button>
-            <button class="btn btn-danger-ghost" id="detail-delete-btn">Delete</button>
+            <button class="btn btn-secondary" id="detail-edit-btn">編集</button>
+            <button class="btn btn-danger-ghost" id="detail-delete-btn">削除</button>
           </div>
         </div>
       </div>
 
       <div class="products-section">
         <div class="products-section-header">
-          <h2>New Products</h2>
+          <h2>新着商品</h2>
           <span class="last-sync-text" id="last-sync-text"></span>
         </div>
         <div id="products-grid" class="products-grid"></div>
         <div id="products-empty" class="empty-state" hidden>
           <div class="empty-state__icon">📦</div>
-          <p class="empty-state__title">No products yet</p>
-          <p class="empty-state__text">Products appear here after the daily sync (6:00 AM UTC).</p>
+          <p class="empty-state__title">商品情報がまだありません</p>
+          <p class="empty-state__text">毎日6時（UTC）の自動取得後に表示されます。</p>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Modal -->
+  <!-- モーダル -->
   <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal">
       <div class="modal__header">
-        <h2 class="modal__title" id="modal-title">Edit Brand</h2>
-        <button class="modal__close" id="modal-close" aria-label="Close">×</button>
+        <h2 class="modal__title" id="modal-title">ブランドを編集</h2>
+        <button class="modal__close" id="modal-close" aria-label="閉じる">×</button>
       </div>
       <div class="modal__body">
         <form id="brand-form" novalidate>
           <div class="form-group">
-            <label class="form-label" for="f-url">Official Website URL</label>
+            <label class="form-label" for="f-url">公式サイトURL</label>
             <div class="url-row">
               <input class="form-input" type="url" id="f-url" placeholder="https://example.com" required>
-              <button type="button" class="btn btn-secondary btn-sm" id="fetch-btn">Get Info</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="fetch-btn">情報を取得</button>
             </div>
             <div class="fetch-status" id="fetch-status"></div>
           </div>
           <div class="form-group">
-            <label class="form-label" for="f-name">Brand Name</label>
-            <input class="form-input" type="text" id="f-name" placeholder="e.g. Maison Margiela" required>
+            <label class="form-label" for="f-name">ブランド名</label>
+            <input class="form-input" type="text" id="f-name" placeholder="例：Maison Margiela" required>
           </div>
           <div class="form-group">
-            <label class="form-label" for="f-description">Description <span class="opt">(optional)</span></label>
+            <label class="form-label" for="f-description">説明 <span class="opt">（任意）</span></label>
             <textarea class="form-textarea" id="f-description" rows="3"></textarea>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="f-style">Style</label>
-              <input class="form-input" type="text" id="f-style" placeholder="e.g. Minimalist">
+              <label class="form-label" for="f-style">系統</label>
+              <input class="form-input" type="text" id="f-style" placeholder="例：ミニマリスト">
             </div>
             <div class="form-group">
-              <label class="form-label" for="f-price">Price Range</label>
+              <label class="form-label" for="f-price">価格帯</label>
               <select class="form-select" id="f-price">
                 <option value="">—</option>
-                <option value="$">$ Budget</option>
-                <option value="$$">$$ Mid-range</option>
-                <option value="$$$">$$$ Premium</option>
-                <option value="$$$$">$$$$ Luxury</option>
+                <option value="$">$ 低価格</option>
+                <option value="$$">$$ ミドル</option>
+                <option value="$$$">$$$ プレミアム</option>
+                <option value="$$$$">$$$$ ラグジュアリー</option>
               </select>
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label" for="f-logo">Logo / Image URL <span class="opt">(auto-filled)</span></label>
+            <label class="form-label" for="f-logo">ロゴ / 画像URL <span class="opt">（自動入力）</span></label>
             <input class="form-input" type="url" id="f-logo">
           </div>
           <input type="hidden" id="f-og-image">
         </form>
       </div>
       <div class="modal__footer">
-        <button type="button" class="btn btn-secondary" id="modal-cancel">Cancel</button>
-        <button type="button" class="btn btn-primary" id="modal-save">Save Brand</button>
+        <button type="button" class="btn btn-secondary" id="modal-cancel">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="modal-save">保存</button>
       </div>
     </div>
   </div>

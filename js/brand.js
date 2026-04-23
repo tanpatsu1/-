@@ -5,9 +5,10 @@ function _relativeTime(dateStr) {
   const m = Math.floor(diff / 60000);
   const h = Math.floor(diff / 3600000);
   const d = Math.floor(diff / 86400000);
-  if (m < 60)  return `${m}m ago`;
-  if (h < 24)  return `${h}h ago`;
-  return `${d}d ago`;
+  if (m < 1)  return 'たった今';
+  if (m < 60) return `${m}分前`;
+  if (h < 24) return `${h}時間前`;
+  return `${d}日前`;
 }
 
 async function _load() {
@@ -83,7 +84,7 @@ function _renderProducts(products) {
   }
 
   if (products[0]?.first_seen_at) {
-    syncText.textContent = `Updated ${_relativeTime(products[0].first_seen_at)}`;
+    syncText.textContent = `${_relativeTime(products[0].first_seen_at)}に更新`;
   }
 
   grid.innerHTML = '';
@@ -118,18 +119,19 @@ document.addEventListener('DOMContentLoaded', () => {
     openModal('edit', _brand, (updated) => {
       _brand = updated;
       _renderDetail(updated);
+      showToast('ブランドを更新しました');
     });
   });
 
   document.getElementById('detail-delete-btn')?.addEventListener('click', async () => {
     if (!_brand) return;
-    if (!confirm(`Delete "${_brand.name}"?\n\nThis will remove all saved products for this brand.`)) return;
+    if (!confirm(`「${_brand.name}」を削除しますか？\n\nこのブランドの商品情報もすべて削除されます。`)) return;
     try {
       await API.del(`/api/brands/${_brand.id}`);
-      showToast('Brand deleted');
+      showToast('ブランドを削除しました');
       setTimeout(() => { location.href = '/'; }, 900);
     } catch {
-      showToast('Failed to delete brand', 'error');
+      showToast('削除に失敗しました', 'error');
     }
   });
 });

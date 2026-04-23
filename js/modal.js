@@ -8,7 +8,7 @@ function openModal(mode, brand, onSave) {
   _onSave    = onSave ?? null;
 
   const title = document.getElementById('modal-title');
-  if (title) title.textContent = mode === 'edit' ? 'Edit Brand' : 'Add Brand';
+  if (title) title.textContent = mode === 'edit' ? 'ブランドを編集' : 'ブランドを追加';
 
   _resetForm();
 
@@ -62,8 +62,8 @@ async function _handleFetch() {
 
   const btn = document.getElementById('fetch-btn');
   btn.disabled = true;
-  btn.textContent = '…';
-  _setStatus('Fetching…', '');
+  btn.textContent = '取得中…';
+  _setStatus('情報を取得しています...', '');
 
   try {
     const meta = await API.post('/api/fetch-meta', { url });
@@ -79,12 +79,12 @@ async function _handleFetch() {
     if (meta.logo_url)     _setField('f-logo',     meta.logo_url);
     if (meta.og_image_url) _setField('f-og-image', meta.og_image_url);
 
-    _setStatus('Info fetched ✓', 'ok');
-  } catch {
-    _setStatus('Could not fetch — fill in manually', 'err');
+    _setStatus('情報を取得しました ✓', 'ok');
+  } catch (err) {
+    _setStatus('自動取得できませんでした。手動で入力してください', 'err');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Get Info';
+    btn.textContent = '情報を取得';
   }
 }
 
@@ -93,7 +93,7 @@ async function _handleSave() {
   const url  = document.getElementById('f-url')?.value.trim();
 
   if (!name || !url) {
-    showToast('Brand name and URL are required', 'error');
+    showToast('ブランド名とURLを入力してください', 'error');
     return;
   }
 
@@ -109,7 +109,7 @@ async function _handleSave() {
 
   const saveBtn = document.getElementById('modal-save');
   saveBtn.disabled = true;
-  saveBtn.textContent = 'Saving…';
+  saveBtn.textContent = '保存中…';
 
   try {
     const result = _modalMode === 'edit'
@@ -117,13 +117,13 @@ async function _handleSave() {
       : await API.post('/api/brands', payload);
 
     closeModal();
-    showToast(_modalMode === 'edit' ? 'Brand updated' : 'Brand added');
+    showToast(_modalMode === 'edit' ? 'ブランドを更新しました' : 'ブランドを追加しました');
     if (_onSave) _onSave(result);
   } catch (err) {
-    showToast(err.message || 'Failed to save', 'error');
+    showToast(err.message || '保存に失敗しました', 'error');
   } finally {
     saveBtn.disabled = false;
-    saveBtn.textContent = 'Save Brand';
+    saveBtn.textContent = '保存';
   }
 }
 
