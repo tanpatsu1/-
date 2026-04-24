@@ -16,8 +16,8 @@ async function getSupabase() {
 
 async function getCurrentUser() {
   const client = await _initClient();
-  const { data: { user } } = await client.auth.getUser();
-  return user;
+  const { data: { session } } = await client.auth.getSession();
+  return session?.user ?? null;
 }
 
 async function requireAuth() {
