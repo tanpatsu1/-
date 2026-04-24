@@ -1,6 +1,8 @@
 let _brands = [];
+let _user   = null;
 
 async function loadBrands() {
+  const sb    = await getSupabase();
   const grid  = document.getElementById('brands-grid');
   const empty = document.getElementById('empty-state');
   const title = document.getElementById('page-title');
@@ -9,14 +11,15 @@ async function loadBrands() {
     '<div class="skeleton" style="height:220px;border-radius:10px"></div>'
   ).join('');
 
-  try {
-    _brands = await API.get('/api/brands');
-  } catch (err) {
+  const { data, error } = await sb.from('brands').select('*').order('name');
+
+  if (error) {
     grid.innerHTML = '';
-    showToast(err.message || 'ブランドの読み込みに失敗しました', 'error');
+    showToast(error.message || 'ブランドの読み込みに失敗しました', 'error');
     return;
   }
 
+  _brands = data || [];
   grid.innerHTML = '';
   title.textContent = `ブランド一覧${_brands.length ? `（${_brands.length}件）` : ''}`;
 
@@ -57,26 +60,17 @@ function _buildCard(brand) {
   `;
 
   const img = article.querySelector('img');
-  if (img) {
-    img.addEventListener('error', () => {
-      img.parentElement.innerHTML = `<div class="brand-card__placeholder">${initial}</div>`;
-    });
-  }
+  if (img) img.addEventListener('error', () => {
+    img.parentElement.innerHTML = `<div class="brand-card__placeholder">${initial}</div>`;
+  });
 
   article.querySelectorAll('.js-nav').forEach(el =>
     el.addEventListener('click', () => { window.location.href = `/brand?id=${brand.id}`; })
   );
-
   article.querySelector('.js-edit').addEventListener('click', (e) => {
     e.stopPropagation();
-    const b = _brands.find(x => x.id === brand.id);
-    openModal('edit', b, (updated) => {
-      const i = _brands.findIndex(x => x.id === updated.id);
-      if (i !== -1) _brands[i] = updated;
-      loadBrands();
-    });
+    openModal('edit', _brands.find(x => x.id === brand.id), () => loadBrands());
   });
-
   article.querySelector('.js-del').addEventListener('click', (e) => {
     e.stopPropagation();
     _confirmDelete(brand.id, brand.name);
@@ -87,22 +81,24 @@ function _buildCard(brand) {
 
 async function _confirmDelete(id, name) {
   if (!confirm(`「${name}」を削除しますか？\n\nこのブランドの商品情報もすべて削除されます。`)) return;
-  try {
-    await API.del(`/api/brands/${id}`);
-    showToast('ブランドを削除しました');
-    loadBrands();
-  } catch {
-    showToast('削除に失敗しました', 'error');
-  }
+  const sb = await getSupabase();
+  const { error } = await sb.from('brands').delete().eq('id', id);
+  if (error) { showToast('削除に失敗しました', 'error'); return; }
+  showToast('ブランドを削除しました');
+  loadBrands();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  loadBrands();
+document.addEventListener('DOMContentLoaded', async () => {
+  _user = await requireAuth();
+  if (!_user) return;
 
-  document.getElementById('add-brand-btn').addEventListener('click', () => {
-    openModal('add', null, () => loadBrands());
-  });
-  document.getElementById('empty-add-btn')?.addEventListener('click', () => {
-    openModal('add', null, () => loadBrands());
-  });
+  // Show user name
+  const nameEl = document.getElementById('user-name');
+  if (nameEl) nameEl.textContent = _user.user_metadata?.full_name || _user.email || '';
+
+  document.getElementById('logout-btn')?.addEventListener('click', signOut);
+  document.getElementById('add-brand-btn').addEventListener('click', () => openModal('add', null, () => loadBrands()));
+  document.getElementById('empty-add-btn')?.addEventListener('click', () => openModal('add', null, () => loadBrands()));
+
+  loadBrands();
 });

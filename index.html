@@ -13,7 +13,11 @@
   <header class="site-header">
     <div class="site-header__inner">
       <a href="/" class="site-title">Brand <span>Manager</span></a>
-      <button class="btn btn-primary" id="add-brand-btn">＋ ブランドを追加</button>
+      <div class="header-right">
+        <span class="user-name" id="user-name"></span>
+        <button class="btn btn-ghost btn-sm" id="logout-btn">ログアウト</button>
+        <button class="btn btn-primary" id="add-brand-btn">＋ ブランドを追加</button>
+      </div>
     </div>
   </header>
 
@@ -87,7 +91,9 @@
 
   <div class="toast-container" id="toast-container"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
   <script src="/js/modal.js"></script>
   <script src="/js/index.js"></script>
 </body>

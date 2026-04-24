@@ -243,6 +243,33 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-primar
 .toast-error { background: var(--danger); }
 @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
+/* ── HEADER RIGHT ── */
+.header-right { display: flex; align-items: center; gap: 10px; }
+.user-name { font-size: 13px; color: var(--text-muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── LOGIN PAGE ── */
+.login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+.login-wrap { width: 100%; padding: 24px; display: flex; align-items: center; justify-content: center; }
+.login-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 48px 40px; text-align: center; width: 100%; max-width: 380px;
+  box-shadow: var(--shadow-lg);
+}
+.login-title { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 8px; }
+.login-title span { font-weight: 300; color: var(--text-muted); }
+.login-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 36px; }
+.btn-google {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 11px 20px; border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: 14px; font-weight: 500;
+  background: var(--surface); color: var(--text-primary);
+  border: 1px solid var(--border); cursor: pointer;
+  transition: background var(--t), box-shadow var(--t);
+}
+.btn-google:hover { background: #F8F8F8; box-shadow: var(--shadow-sm); }
+.btn-google:disabled { opacity: 0.6; cursor: not-allowed; }
+.login-note { font-size: 12px; color: var(--text-muted); margin-top: 16px; min-height: 18px; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .main-container { padding: 24px 16px; }

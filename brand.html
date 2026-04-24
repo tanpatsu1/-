@@ -13,13 +13,16 @@
   <header class="site-header">
     <div class="site-header__inner">
       <a href="/" class="site-title">Brand <span>Manager</span></a>
+      <div class="header-right">
+        <span class="user-name" id="user-name"></span>
+        <button class="btn btn-ghost btn-sm" id="logout-btn">ログアウト</button>
+      </div>
     </div>
   </header>
 
   <main class="main-container">
     <a href="/" class="back-link">← ブランド一覧</a>
 
-    <!-- ローディング -->
     <div id="brand-loading">
       <div class="brand-detail-header">
         <div class="skeleton" style="aspect-ratio:4/3;border-radius:10px"></div>
@@ -27,20 +30,17 @@
           <div class="skeleton" style="height:40px;width:60%;margin-bottom:14px"></div>
           <div class="skeleton" style="height:16px;width:40%;margin-bottom:20px"></div>
           <div class="skeleton" style="height:14px;margin-bottom:8px"></div>
-          <div class="skeleton" style="height:14px;width:80%;margin-bottom:8px"></div>
-          <div class="skeleton" style="height:14px;width:65%"></div>
+          <div class="skeleton" style="height:14px;width:80%"></div>
         </div>
       </div>
     </div>
 
-    <!-- エラー -->
     <div id="brand-error" class="empty-state" hidden>
       <div class="empty-state__icon">🔍</div>
       <h2 class="empty-state__title">ブランドが見つかりません</h2>
       <a href="/" class="btn btn-primary" style="margin-top:8px">← ブランド一覧へ</a>
     </div>
 
-    <!-- 詳細 -->
     <div id="brand-detail" hidden>
       <div class="brand-detail-header">
         <div class="brand-detail-image" id="detail-image-wrap"></div>
@@ -48,9 +48,7 @@
           <h1 id="detail-name"></h1>
           <div class="brand-detail-meta" id="detail-meta"></div>
           <p class="brand-detail-description" id="detail-description"></p>
-          <a class="brand-official-link" id="detail-url" target="_blank" rel="noopener noreferrer" hidden>
-            公式サイト ↗
-          </a>
+          <a class="brand-official-link" id="detail-url" target="_blank" rel="noopener noreferrer" hidden>公式サイト ↗</a>
           <div class="brand-detail-actions">
             <button class="btn btn-secondary" id="detail-edit-btn">編集</button>
             <button class="btn btn-danger-ghost" id="detail-delete-btn">削除</button>
@@ -73,7 +71,6 @@
     </div>
   </main>
 
-  <!-- モーダル -->
   <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal">
       <div class="modal__header">
@@ -130,7 +127,9 @@
 
   <div class="toast-container" id="toast-container"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
   <script src="/js/modal.js"></script>
   <script src="/js/brand.js"></script>
 </body>

@@ -20,10 +20,13 @@ async function _load() {
   const errorEl   = document.getElementById('brand-error');
 
   try {
-    const [brand, { products }] = await Promise.all([
-      API.get(`/api/brands/${id}`),
-      API.get(`/api/brands/${id}/products`),
+    const sb = await getSupabase();
+    const [{ data: brand, error: e1 }, { data: products, error: e2 }] = await Promise.all([
+      sb.from('brands').select('*').eq('id', id).single(),
+      sb.from('products').select('*').eq('brand_id', id).order('first_seen_at', { ascending: false }).limit(50),
     ]);
+
+    if (e1) throw e1;
     _brand = brand;
     document.title = `${brand.name} — Brand Manager`;
     _renderDetail(brand);
@@ -41,35 +44,24 @@ function _renderDetail(brand) {
   const imgUrl  = brand.og_image_url || brand.logo_url;
   const initial = escHtml(brand.name.charAt(0).toUpperCase());
 
-  if (imgUrl) {
-    wrap.innerHTML = `<img src="${escHtml(imgUrl)}" alt="${escHtml(brand.name)}" onerror="this.parentElement.innerHTML='<div class=\\"brand-detail-placeholder\\">${initial}</div>'">`;
-  } else {
-    wrap.innerHTML = `<div class="brand-detail-placeholder">${initial}</div>`;
-  }
+  wrap.innerHTML = imgUrl
+    ? `<img src="${escHtml(imgUrl)}" alt="${escHtml(brand.name)}" onerror="this.parentElement.innerHTML='<div class=\\"brand-detail-placeholder\\">${initial}</div>'">`
+    : `<div class="brand-detail-placeholder">${initial}</div>`;
 
   document.getElementById('detail-name').textContent = brand.name;
 
-  const meta = document.getElementById('detail-meta');
-  meta.innerHTML = [
+  document.getElementById('detail-meta').innerHTML = [
     brand.style       ? `<span class="badge badge-style">${escHtml(brand.style)}</span>` : '',
     brand.price_range ? `<span class="badge badge-price">${escHtml(brand.price_range)}</span>` : '',
   ].join('');
 
   const desc = document.getElementById('detail-description');
-  if (brand.description) {
-    desc.textContent = brand.description;
-    desc.hidden = false;
-  } else {
-    desc.hidden = true;
-  }
+  desc.textContent = brand.description || '';
+  desc.hidden = !brand.description;
 
   const urlEl = document.getElementById('detail-url');
-  if (brand.url) {
-    urlEl.href   = brand.url;
-    urlEl.hidden = false;
-  } else {
-    urlEl.hidden = true;
-  }
+  urlEl.href   = brand.url;
+  urlEl.hidden = !brand.url;
 }
 
 function _renderProducts(products) {
@@ -77,20 +69,13 @@ function _renderProducts(products) {
   const emptyEl  = document.getElementById('products-empty');
   const syncText = document.getElementById('last-sync-text');
 
-  if (products.length === 0) {
-    grid.hidden    = true;
-    emptyEl.hidden = false;
-    return;
+  if (!products.length) {
+    grid.hidden = true; emptyEl.hidden = false; return;
   }
 
-  if (products[0]?.first_seen_at) {
-    syncText.textContent = `${_relativeTime(products[0].first_seen_at)}に更新`;
-  }
+  if (products[0]?.first_seen_at) syncText.textContent = `${_relativeTime(products[0].first_seen_at)}に更新`;
 
-  grid.innerHTML = '';
-  grid.hidden    = false;
-  emptyEl.hidden = true;
-
+  grid.innerHTML = ''; grid.hidden = false; emptyEl.hidden = true;
   products.forEach(p => {
     const card = document.createElement('article');
     card.className = 'product-card';
@@ -103,35 +88,34 @@ function _renderProducts(products) {
           <p class="product-card__name">${escHtml(p.name)}</p>
           ${p.price ? `<p class="product-card__price">${escHtml(p.price)}</p>` : ''}
         </div>
-      </a>
-    `;
+      </a>`;
     const img = card.querySelector('img');
     if (img) img.addEventListener('error', () => { img.parentElement.style.background = '#F0F0F0'; img.remove(); });
     grid.appendChild(card);
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await requireAuth();
+  if (!user) return;
+
+  const nameEl = document.getElementById('user-name');
+  if (nameEl) nameEl.textContent = user.user_metadata?.full_name || user.email || '';
+  document.getElementById('logout-btn')?.addEventListener('click', signOut);
+
   _load();
 
   document.getElementById('detail-edit-btn')?.addEventListener('click', () => {
     if (!_brand) return;
-    openModal('edit', _brand, (updated) => {
-      _brand = updated;
-      _renderDetail(updated);
-      showToast('ブランドを更新しました');
-    });
+    openModal('edit', _brand, updated => { _brand = updated; _renderDetail(updated); showToast('ブランドを更新しました'); });
   });
 
   document.getElementById('detail-delete-btn')?.addEventListener('click', async () => {
-    if (!_brand) return;
-    if (!confirm(`「${_brand.name}」を削除しますか？\n\nこのブランドの商品情報もすべて削除されます。`)) return;
-    try {
-      await API.del(`/api/brands/${_brand.id}`);
-      showToast('ブランドを削除しました');
-      setTimeout(() => { location.href = '/'; }, 900);
-    } catch {
-      showToast('削除に失敗しました', 'error');
-    }
+    if (!_brand || !confirm(`「${_brand.name}」を削除しますか？\n\nこのブランドの商品情報もすべて削除されます。`)) return;
+    const sb = await getSupabase();
+    const { error } = await sb.from('brands').delete().eq('id', _brand.id);
+    if (error) { showToast('削除に失敗しました', 'error'); return; }
+    showToast('ブランドを削除しました');
+    setTimeout(() => { location.href = '/'; }, 900);
   });
 });

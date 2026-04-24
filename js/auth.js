@@ -1,0 +1,41 @@
+/* Supabase Auth module — loaded after Supabase CDN script */
+let _client = null;
+
+async function _initClient() {
+  if (_client) return _client;
+  const cfg = await fetch('/api/config').then(r => r.json());
+  _client = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
+    auth: { autoRefreshToken: true, persistSession: true },
+  });
+  return _client;
+}
+
+async function getSupabase() {
+  return _initClient();
+}
+
+async function getCurrentUser() {
+  const client = await _initClient();
+  const { data: { user } } = await client.auth.getUser();
+  return user;
+}
+
+async function requireAuth() {
+  const user = await getCurrentUser();
+  if (!user) { window.location.href = '/login'; return null; }
+  return user;
+}
+
+async function signInWithGoogle() {
+  const client = await _initClient();
+  await client.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + '/' },
+  });
+}
+
+async function signOut() {
+  const client = await _initClient();
+  await client.auth.signOut();
+  window.location.href = '/login';
+}
