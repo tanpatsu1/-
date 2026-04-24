@@ -26,15 +26,15 @@ async function requireAuth() {
   return user;
 }
 
-async function sendOtp(email) {
+async function signUp(email, password) {
   const client = await _initClient();
-  const { error } = await client.auth.signInWithOtp({ email });
+  const { error } = await client.auth.signUp({ email, password });
   if (error) throw new Error(error.message);
 }
 
-async function verifyOtp(email, token) {
+async function signInWithPassword(email, password) {
   const client = await _initClient();
-  const { error } = await client.auth.verifyOtp({ email, token, type: 'email' });
+  const { error } = await client.auth.signInWithPassword({ email, password });
   if (error) throw new Error(error.message);
 }
 

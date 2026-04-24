@@ -20,7 +20,7 @@
 }
 
 html { font-size: 16px; -webkit-font-smoothing: antialiased; }
-body { font-family: var(--font); background: var(--bg); color: var(--text-primary); line-height: 1.5; min-height: 100vh; }
+body { font-family: var(--font); background: var(--bg); color: var(--text-primary); line-height: 1.5; min-height: 100vh; overflow-x: hidden; }
 
 /* ── HEADER ── */
 .site-header {
@@ -270,6 +270,15 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-primar
 .btn-google:disabled { opacity: 0.6; cursor: not-allowed; }
 .login-note { font-size: 12px; color: var(--text-muted); margin-top: 16px; min-height: 18px; }
 
+/* ── LOGIN TABS ── */
+.login-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 28px; margin-left: -40px; margin-right: -40px; }
+.login-tab {
+  flex: 1; padding: 12px; font-size: 14px; font-weight: 500; color: var(--text-muted);
+  background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; transition: color var(--t), border-color var(--t);
+}
+.login-tab.is-active { color: var(--text-primary); border-bottom-color: var(--text-primary); }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .main-container { padding: 24px 16px; }
@@ -277,9 +286,14 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-primar
   .form-row { grid-template-columns: 1fr; }
   .brand-detail-info h1 { font-size: 26px; }
   .brand-card__actions { opacity: 1; }
+  .brands-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
 }
 @media (max-width: 480px) {
   .site-header { padding: 0 16px; }
-  .brands-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .login-card { padding: 36px 24px; }
+  .login-tabs { margin-left: -24px; margin-right: -24px; }
+  .brands-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .products-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .brand-card { min-width: 0; }
+  .brand-card__name { font-size: 13px; }
 }

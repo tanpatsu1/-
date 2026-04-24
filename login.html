@@ -14,29 +14,41 @@
     <div class="login-card">
       <h1 class="login-title">Brand <span>Manager</span></h1>
 
-      <!-- Step 1: Email -->
-      <div id="step-email">
-        <p class="login-subtitle">メールアドレスに6桁のコードを送ります</p>
-        <div class="form-group" style="margin-bottom:12px">
-          <label class="form-label" for="login-email">メールアドレス</label>
-          <input class="form-input" type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
-        </div>
-        <button class="btn btn-primary" id="send-btn" style="width:100%">コードを送る</button>
-        <p class="fetch-status" id="send-status" style="margin-top:12px;text-align:center"></p>
+      <div class="login-tabs">
+        <button class="login-tab is-active" id="tab-login" type="button">ログイン</button>
+        <button class="login-tab" id="tab-signup" type="button">新規登録</button>
       </div>
 
-      <!-- Step 2: Code -->
-      <div id="step-code" hidden>
-        <p class="login-subtitle">メールに届いた6桁のコードを入力してください</p>
-        <div class="form-group" style="margin-bottom:12px">
-          <label class="form-label" for="login-code">確認コード</label>
-          <input class="form-input" type="text" id="login-code" placeholder="123456"
-            maxlength="6" inputmode="numeric" autocomplete="one-time-code"
-            style="font-size:1.5rem;letter-spacing:.3em;text-align:center">
+      <!-- ログイン -->
+      <div id="pane-login">
+        <div class="form-group" style="margin-bottom:12px;text-align:left">
+          <label class="form-label" for="l-email">メールアドレス</label>
+          <input class="form-input" type="email" id="l-email" autocomplete="email">
         </div>
-        <button class="btn btn-primary" id="verify-btn" style="width:100%">ログイン</button>
-        <button class="btn btn-ghost btn-sm" id="back-btn" style="width:100%;margin-top:8px">← メールアドレスを変更</button>
-        <p class="fetch-status" id="verify-status" style="margin-top:12px;text-align:center"></p>
+        <div class="form-group" style="margin-bottom:16px;text-align:left">
+          <label class="form-label" for="l-pass">パスワード</label>
+          <input class="form-input" type="password" id="l-pass" autocomplete="current-password">
+        </div>
+        <button class="btn btn-primary" id="login-btn" style="width:100%">ログイン</button>
+        <p class="fetch-status" id="login-status" style="margin-top:12px;text-align:center"></p>
+      </div>
+
+      <!-- 新規登録 -->
+      <div id="pane-signup" hidden>
+        <div class="form-group" style="margin-bottom:12px;text-align:left">
+          <label class="form-label" for="s-email">メールアドレス</label>
+          <input class="form-input" type="email" id="s-email" autocomplete="email">
+        </div>
+        <div class="form-group" style="margin-bottom:12px;text-align:left">
+          <label class="form-label" for="s-pass">パスワード</label>
+          <input class="form-input" type="password" id="s-pass" autocomplete="new-password">
+        </div>
+        <div class="form-group" style="margin-bottom:16px;text-align:left">
+          <label class="form-label" for="s-pass2">パスワード（確認）</label>
+          <input class="form-input" type="password" id="s-pass2" autocomplete="new-password">
+        </div>
+        <button class="btn btn-primary" id="signup-btn" style="width:100%">登録する</button>
+        <p class="fetch-status" id="signup-status" style="margin-top:12px;text-align:center"></p>
       </div>
     </div>
   </div>
@@ -44,64 +56,71 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/js/auth.js"></script>
   <script>
-    let _email = '';
-
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await getCurrentUser();
       if (user) { window.location.href = '/'; return; }
 
-      const sendBtn   = document.getElementById('send-btn');
-      const verifyBtn = document.getElementById('verify-btn');
-      const backBtn   = document.getElementById('back-btn');
-      const sendStatus   = document.getElementById('send-status');
-      const verifyStatus = document.getElementById('verify-status');
+      // Tab switching
+      const tabLogin  = document.getElementById('tab-login');
+      const tabSignup = document.getElementById('tab-signup');
+      const paneLogin  = document.getElementById('pane-login');
+      const paneSignup = document.getElementById('pane-signup');
 
-      async function sendCode() {
-        const email = document.getElementById('login-email').value.trim();
-        if (!email) { sendStatus.textContent = 'メールアドレスを入力してください'; sendStatus.className = 'fetch-status err'; return; }
-        sendBtn.disabled = true; sendBtn.textContent = '送信中…';
-        sendStatus.textContent = ''; sendStatus.className = 'fetch-status';
-        try {
-          await sendOtp(email);
-          _email = email;
-          document.getElementById('step-email').hidden = true;
-          document.getElementById('step-code').hidden  = false;
-          setTimeout(() => document.getElementById('login-code').focus(), 60);
-        } catch (err) {
-          sendStatus.textContent = err.message || '送信に失敗しました';
-          sendStatus.className = 'fetch-status err';
-          sendBtn.disabled = false; sendBtn.textContent = 'コードを送る';
-        }
-      }
+      tabLogin.addEventListener('click', () => {
+        tabLogin.classList.add('is-active'); tabSignup.classList.remove('is-active');
+        paneLogin.hidden = false; paneSignup.hidden = true;
+      });
+      tabSignup.addEventListener('click', () => {
+        tabSignup.classList.add('is-active'); tabLogin.classList.remove('is-active');
+        paneSignup.hidden = false; paneLogin.hidden = true;
+      });
 
-      async function verifyCode() {
-        const token = document.getElementById('login-code').value.trim();
-        if (token.length !== 6) { verifyStatus.textContent = '6桁のコードを入力してください'; verifyStatus.className = 'fetch-status err'; return; }
-        verifyBtn.disabled = true; verifyBtn.textContent = '確認中…';
-        verifyStatus.textContent = ''; verifyStatus.className = 'fetch-status';
+      // Login
+      const loginStatus = document.getElementById('login-status');
+      async function doLogin() {
+        const email = document.getElementById('l-email').value.trim();
+        const pass  = document.getElementById('l-pass').value;
+        if (!email || !pass) { loginStatus.textContent = 'メールとパスワードを入力してください'; loginStatus.className = 'fetch-status err'; return; }
+        const btn = document.getElementById('login-btn');
+        btn.disabled = true; btn.textContent = '確認中…';
+        loginStatus.textContent = ''; loginStatus.className = 'fetch-status';
         try {
-          await verifyOtp(_email, token);
+          await signInWithPassword(email, pass);
           window.location.href = '/';
         } catch (err) {
-          verifyStatus.textContent = err.message || 'コードが正しくありません';
-          verifyStatus.className = 'fetch-status err';
-          verifyBtn.disabled = false; verifyBtn.textContent = 'ログイン';
+          loginStatus.textContent = err.message === 'Invalid login credentials' ? 'メールアドレスまたはパスワードが正しくありません' : (err.message || 'ログインに失敗しました');
+          loginStatus.className = 'fetch-status err';
+          btn.disabled = false; btn.textContent = 'ログイン';
         }
       }
+      document.getElementById('login-btn').addEventListener('click', doLogin);
+      document.getElementById('l-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
-      sendBtn.addEventListener('click', sendCode);
-      document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') sendCode(); });
-
-      verifyBtn.addEventListener('click', verifyCode);
-      document.getElementById('login-code').addEventListener('keydown', e => { if (e.key === 'Enter') verifyCode(); });
-
-      backBtn.addEventListener('click', () => {
-        document.getElementById('step-code').hidden  = true;
-        document.getElementById('step-email').hidden = false;
-        sendBtn.disabled = false; sendBtn.textContent = 'コードを送る';
-        sendStatus.textContent = ''; sendStatus.className = 'fetch-status';
-        document.getElementById('login-code').value = '';
-      });
+      // Sign-up
+      const signupStatus = document.getElementById('signup-status');
+      async function doSignup() {
+        const email = document.getElementById('s-email').value.trim();
+        const pass  = document.getElementById('s-pass').value;
+        const pass2 = document.getElementById('s-pass2').value;
+        if (!email || !pass) { signupStatus.textContent = 'メールとパスワードを入力してください'; signupStatus.className = 'fetch-status err'; return; }
+        if (pass.length < 6) { signupStatus.textContent = 'パスワードは6文字以上にしてください'; signupStatus.className = 'fetch-status err'; return; }
+        if (pass !== pass2) { signupStatus.textContent = 'パスワードが一致しません'; signupStatus.className = 'fetch-status err'; return; }
+        const btn = document.getElementById('signup-btn');
+        btn.disabled = true; btn.textContent = '登録中…';
+        signupStatus.textContent = ''; signupStatus.className = 'fetch-status';
+        try {
+          await signUp(email, pass);
+          signupStatus.textContent = '登録しました。メールの確認リンクをクリックして有効化してください。';
+          signupStatus.className = 'fetch-status ok';
+          btn.disabled = false; btn.textContent = '登録する';
+        } catch (err) {
+          signupStatus.textContent = err.message || '登録に失敗しました';
+          signupStatus.className = 'fetch-status err';
+          btn.disabled = false; btn.textContent = '登録する';
+        }
+      }
+      document.getElementById('signup-btn').addEventListener('click', doSignup);
+      document.getElementById('s-pass2').addEventListener('keydown', e => { if (e.key === 'Enter') doSignup(); });
     });
   </script>
 </body>
