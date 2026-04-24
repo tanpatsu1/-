@@ -110,9 +110,7 @@
         signupStatus.textContent = ''; signupStatus.className = 'fetch-status';
         try {
           await signUp(email, pass);
-          signupStatus.textContent = '登録しました。メールの確認リンクをクリックして有効化してください。';
-          signupStatus.className = 'fetch-status ok';
-          btn.disabled = false; btn.textContent = '登録する';
+          window.location.href = '/';
         } catch (err) {
           signupStatus.textContent = err.message || '登録に失敗しました';
           signupStatus.className = 'fetch-status err';
