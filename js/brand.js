@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('detail-edit-btn')?.addEventListener('click', () => {
     if (!_brand) return;
-    openModal('edit', _brand, updated => { _brand = updated; _renderDetail(updated); showToast('ブランドを更新しました'); });
+    openModal('edit', _brand, updated => { _brand = updated; _renderDetail(updated); });
   });
 
   document.getElementById('detail-delete-btn')?.addEventListener('click', async () => {

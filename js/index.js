@@ -81,7 +81,7 @@ function _render() {
   const list  = _getFiltered();
   grid.innerHTML = '';
   if (!list.length) {
-    empty.hidden = _brands.length === 0;
+    empty.hidden = _brands.length > 0;
     if (_brands.length) grid.innerHTML = '<p style="color:var(--text-muted);font-size:14px;padding:24px 0">該当するブランドが見つかりません</p>';
     return;
   }
