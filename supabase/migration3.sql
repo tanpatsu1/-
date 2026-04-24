@@ -11,6 +11,26 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS tags      TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS notes     TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS is_manual BOOLEAN NOT NULL DEFAULT false;
 
+-- products RLS: INSERT / UPDATE / DELETE policies
+DROP POLICY IF EXISTS "Users can insert own brand products" ON products;
+DROP POLICY IF EXISTS "Users can update own brand products" ON products;
+DROP POLICY IF EXISTS "Users can delete own brand products" ON products;
+
+CREATE POLICY "Users can insert own brand products" ON products
+  FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM brands WHERE brands.id = products.brand_id AND brands.user_id = auth.uid())
+  );
+
+CREATE POLICY "Users can update own brand products" ON products
+  FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM brands WHERE brands.id = products.brand_id AND brands.user_id = auth.uid())
+  );
+
+CREATE POLICY "Users can delete own brand products" ON products
+  FOR DELETE USING (
+    EXISTS (SELECT 1 FROM brands WHERE brands.id = products.brand_id AND brands.user_id = auth.uid())
+  );
+
 -- bookmarks table (in case migration2 was incomplete)
 CREATE TABLE IF NOT EXISTS bookmarks (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
