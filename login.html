@@ -13,20 +13,30 @@
   <div class="login-wrap">
     <div class="login-card">
       <h1 class="login-title">Brand <span>Manager</span></h1>
-      <p class="login-subtitle">メールアドレスにログインリンクを送ります</p>
 
-      <div id="login-form">
+      <!-- Step 1: Email -->
+      <div id="step-email">
+        <p class="login-subtitle">メールアドレスに6桁のコードを送ります</p>
         <div class="form-group" style="margin-bottom:12px">
           <label class="form-label" for="login-email">メールアドレス</label>
           <input class="form-input" type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
         </div>
-        <button class="btn btn-primary" id="login-btn" style="width:100%">ログインリンクを送る</button>
-        <p class="fetch-status" id="login-status" style="margin-top:12px;text-align:center"></p>
+        <button class="btn btn-primary" id="send-btn" style="width:100%">コードを送る</button>
+        <p class="fetch-status" id="send-status" style="margin-top:12px;text-align:center"></p>
       </div>
 
-      <div id="login-sent" hidden style="text-align:center">
-        <div style="font-size:2.5rem;margin-bottom:12px">📬</div>
-        <p style="color:var(--text-muted);line-height:1.6">メールを送信しました。<br>届いたリンクをクリックしてください。</p>
+      <!-- Step 2: Code -->
+      <div id="step-code" hidden>
+        <p class="login-subtitle">メールに届いた6桁のコードを入力してください</p>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" for="login-code">確認コード</label>
+          <input class="form-input" type="text" id="login-code" placeholder="123456"
+            maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+            style="font-size:1.5rem;letter-spacing:.3em;text-align:center">
+        </div>
+        <button class="btn btn-primary" id="verify-btn" style="width:100%">ログイン</button>
+        <button class="btn btn-ghost btn-sm" id="back-btn" style="width:100%;margin-top:8px">← メールアドレスを変更</button>
+        <p class="fetch-status" id="verify-status" style="margin-top:12px;text-align:center"></p>
       </div>
     </div>
   </div>
@@ -34,40 +44,63 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/js/auth.js"></script>
   <script>
+    let _email = '';
+
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await getCurrentUser();
       if (user) { window.location.href = '/'; return; }
 
-      const btn    = document.getElementById('login-btn');
-      const status = document.getElementById('login-status');
+      const sendBtn   = document.getElementById('send-btn');
+      const verifyBtn = document.getElementById('verify-btn');
+      const backBtn   = document.getElementById('back-btn');
+      const sendStatus   = document.getElementById('send-status');
+      const verifyStatus = document.getElementById('verify-status');
 
-      async function submit() {
+      async function sendCode() {
         const email = document.getElementById('login-email').value.trim();
-        if (!email) {
-          status.textContent = 'メールアドレスを入力してください';
-          status.className = 'fetch-status err';
-          return;
-        }
-        btn.disabled = true;
-        btn.textContent = '送信中…';
-        status.textContent = '';
-        status.className = 'fetch-status';
-
+        if (!email) { sendStatus.textContent = 'メールアドレスを入力してください'; sendStatus.className = 'fetch-status err'; return; }
+        sendBtn.disabled = true; sendBtn.textContent = '送信中…';
+        sendStatus.textContent = ''; sendStatus.className = 'fetch-status';
         try {
-          await sendMagicLink(email);
-          document.getElementById('login-form').hidden = true;
-          document.getElementById('login-sent').hidden = false;
+          await sendOtp(email);
+          _email = email;
+          document.getElementById('step-email').hidden = true;
+          document.getElementById('step-code').hidden  = false;
+          setTimeout(() => document.getElementById('login-code').focus(), 60);
         } catch (err) {
-          status.textContent = err.message || '送信に失敗しました';
-          status.className = 'fetch-status err';
-          btn.disabled = false;
-          btn.textContent = 'ログインリンクを送る';
+          sendStatus.textContent = err.message || '送信に失敗しました';
+          sendStatus.className = 'fetch-status err';
+          sendBtn.disabled = false; sendBtn.textContent = 'コードを送る';
         }
       }
 
-      btn.addEventListener('click', submit);
-      document.getElementById('login-email').addEventListener('keydown', e => {
-        if (e.key === 'Enter') submit();
+      async function verifyCode() {
+        const token = document.getElementById('login-code').value.trim();
+        if (token.length !== 6) { verifyStatus.textContent = '6桁のコードを入力してください'; verifyStatus.className = 'fetch-status err'; return; }
+        verifyBtn.disabled = true; verifyBtn.textContent = '確認中…';
+        verifyStatus.textContent = ''; verifyStatus.className = 'fetch-status';
+        try {
+          await verifyOtp(_email, token);
+          window.location.href = '/';
+        } catch (err) {
+          verifyStatus.textContent = err.message || 'コードが正しくありません';
+          verifyStatus.className = 'fetch-status err';
+          verifyBtn.disabled = false; verifyBtn.textContent = 'ログイン';
+        }
+      }
+
+      sendBtn.addEventListener('click', sendCode);
+      document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') sendCode(); });
+
+      verifyBtn.addEventListener('click', verifyCode);
+      document.getElementById('login-code').addEventListener('keydown', e => { if (e.key === 'Enter') verifyCode(); });
+
+      backBtn.addEventListener('click', () => {
+        document.getElementById('step-code').hidden  = true;
+        document.getElementById('step-email').hidden = false;
+        sendBtn.disabled = false; sendBtn.textContent = 'コードを送る';
+        sendStatus.textContent = ''; sendStatus.className = 'fetch-status';
+        document.getElementById('login-code').value = '';
       });
     });
   </script>

@@ -26,14 +26,16 @@ async function requireAuth() {
   return user;
 }
 
-async function sendMagicLink(email) {
+async function sendOtp(email) {
   const client = await _initClient();
-  const { error } = await client.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.origin + '/' },
-  });
+  const { error } = await client.auth.signInWithOtp({ email });
   if (error) throw new Error(error.message);
-  return true;
+}
+
+async function verifyOtp(email, token) {
+  const client = await _initClient();
+  const { error } = await client.auth.verifyOtp({ email, token, type: 'email' });
+  if (error) throw new Error(error.message);
 }
 
 async function signOut() {
