@@ -18,14 +18,30 @@ const API = {
   del:  (path)       => API.request('DELETE', path),
 };
 
-function showToast(message, type = '') {
+function parseTags(str) {
+  if (!str) return [];
+  return str.split(',').map(t => t.trim()).filter(Boolean);
+}
+
+function showToast(message, type = '', action = null) {
   const container = document.getElementById('toast-container');
-  if (!container) return;
+  if (!container) return null;
   const toast = document.createElement('div');
   toast.className = `toast${type === 'error' ? ' toast-error' : ''}`;
-  toast.textContent = message;
+  if (action) {
+    const span = document.createElement('span');
+    span.textContent = message;
+    const btn = document.createElement('button');
+    btn.className = 'toast-action';
+    btn.textContent = action.label;
+    btn.addEventListener('click', () => { action.callback(); toast.remove(); });
+    toast.append(span, btn);
+  } else {
+    toast.textContent = message;
+  }
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3200);
+  const timer = setTimeout(() => toast.remove(), 3500);
+  return () => { clearTimeout(timer); toast.remove(); };
 }
 
 function escHtml(str) {
@@ -37,3 +53,4 @@ function escHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+

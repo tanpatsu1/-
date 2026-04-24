@@ -53,6 +53,10 @@
           <div class="brand-detail-meta" id="detail-meta"></div>
           <div class="tags-row" id="detail-tags"></div>
           <p class="brand-detail-description" id="detail-description"></p>
+          <div class="notes-box" id="detail-notes" hidden>
+            <div class="notes-box__label">メモ</div>
+            <div class="notes-box__text" id="detail-notes-text"></div>
+          </div>
           <a class="brand-official-link" id="detail-url" target="_blank" rel="noopener noreferrer" hidden>公式サイト ↗</a>
           <div class="brand-detail-actions">
             <button class="btn btn-secondary" id="detail-edit-btn">編集</button>
@@ -66,6 +70,10 @@
           <h2>商品</h2>
           <span class="last-sync-text" id="last-sync-text"></span>
           <button class="btn btn-secondary btn-sm" id="add-product-btn" style="margin-left:auto">＋ 手動追加</button>
+        </div>
+        <div class="product-filter-row" id="product-filter-row" hidden>
+          <input class="product-search-input" type="search" id="product-search" placeholder="商品名・タグで検索…">
+          <div class="filter-row" id="product-tag-filter" style="margin-bottom:0;min-height:0;flex:none"></div>
         </div>
         <div id="products-grid" class="products-grid"></div>
         <div id="products-empty" class="empty-state" hidden>
@@ -126,6 +134,10 @@
             <label class="form-label" for="f-tags">タグ <span class="opt">（任意・カンマ区切り）</span></label>
             <input class="form-input" type="text" id="f-tags" placeholder="例: アウター, ミニマル">
             <div class="tag-presets" id="tag-presets"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-notes">メモ <span class="opt">（任意）</span></label>
+            <textarea class="form-textarea" id="f-notes" rows="2" placeholder="セール時期、サイズ感など"></textarea>
           </div>
           <input type="hidden" id="f-og-image">
         </form>

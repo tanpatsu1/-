@@ -1,5 +1,15 @@
-let _brand = null;
-let _bookmarks = new Set();
+let _brand         = null;
+let _products      = [];
+let _bookmarks     = new Set();
+let _productFilterQ   = '';
+let _productFilterTag = '';
+let _editingProductId = null;
+
+const STATUS_CONFIG = {
+  wishlist:    { label: '★ ほしい',    next: 'considering' },
+  considering: { label: '？ 検討中',   next: 'purchased'   },
+  purchased:   { label: '✓ 購入済み', next: 'wishlist'    },
+};
 
 function _relativeTime(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -10,11 +20,6 @@ function _relativeTime(dateStr) {
   if (m < 60) return `${m}分前`;
   if (h < 24) return `${h}時間前`;
   return `${d}日前`;
-}
-
-function _parseTags(str) {
-  if (!str) return [];
-  return str.split(',').map(t => t.trim()).filter(Boolean);
 }
 
 async function _load() {
@@ -30,16 +35,17 @@ async function _load() {
     const user = await getCurrentUser();
     const [{ data: brand, error: e1 }, { data: products }, { data: bms }] = await Promise.all([
       sb.from('brands').select('*').eq('id', id).single(),
-      sb.from('products').select('*').eq('brand_id', id).order('first_seen_at', { ascending: false }).limit(100),
+      sb.from('products').select('*').eq('brand_id', id).order('first_seen_at', { ascending: false }),
       user ? sb.from('bookmarks').select('product_id').eq('user_id', user.id) : Promise.resolve({ data: [] }),
     ]);
 
     if (e1) throw e1;
-    _brand = brand;
+    _brand     = brand;
+    _products  = products || [];
     _bookmarks = new Set((bms || []).map(b => b.product_id));
     document.title = `${brand.name} — Brand Manager`;
     _renderDetail(brand);
-    _renderProducts(products || []);
+    _renderProducts();
     loadingEl.hidden = true;
     detailEl.hidden  = false;
   } catch {
@@ -58,14 +64,13 @@ function _renderDetail(brand) {
     : `<div class="brand-detail-placeholder">${initial}</div>`;
 
   document.getElementById('detail-name').textContent = brand.name;
-
   document.getElementById('detail-meta').innerHTML = [
     brand.style       ? `<span class="badge badge-style">${escHtml(brand.style)}</span>` : '',
     brand.price_range ? `<span class="badge badge-price">${escHtml(brand.price_range)}</span>` : '',
   ].join('');
 
   const tagsEl = document.getElementById('detail-tags');
-  const tags   = _parseTags(brand.tags);
+  const tags   = parseTags(brand.tags);
   tagsEl.innerHTML = tags.map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('');
   tagsEl.hidden = !tags.length;
 
@@ -73,49 +78,146 @@ function _renderDetail(brand) {
   desc.textContent = brand.description || '';
   desc.hidden = !brand.description;
 
+  const notesBox  = document.getElementById('detail-notes');
+  const notesText = document.getElementById('detail-notes-text');
+  if (notesBox && notesText) {
+    notesText.textContent = brand.notes || '';
+    notesBox.hidden = !brand.notes;
+  }
+
   const urlEl = document.getElementById('detail-url');
   urlEl.href   = brand.url;
   urlEl.hidden = !brand.url;
 }
 
-function _renderProducts(products) {
-  const grid     = document.getElementById('products-grid');
-  const emptyEl  = document.getElementById('products-empty');
-  const syncText = document.getElementById('last-sync-text');
+function _getFilteredProducts() {
+  let list = _products.slice();
+  if (_productFilterQ) {
+    const q = _productFilterQ.toLowerCase();
+    list = list.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      parseTags(p.tags).some(t => t.toLowerCase().includes(q))
+    );
+  }
+  if (_productFilterTag) {
+    list = list.filter(p => parseTags(p.tags).includes(_productFilterTag));
+  }
+  return list;
+}
 
-  if (!products.length) {
+function _buildProductTagFilter() {
+  const row = document.getElementById('product-tag-filter');
+  if (!row) return;
+  const allTags = [...new Set(_products.flatMap(p => parseTags(p.tags)))].sort();
+  row.innerHTML = allTags.map(t =>
+    `<button class="filter-chip${_productFilterTag === t ? ' is-active' : ''}" data-tag="${escHtml(t)}">${escHtml(t)}</button>`
+  ).join('');
+  row.querySelectorAll('.filter-chip').forEach(btn =>
+    btn.addEventListener('click', () => {
+      _productFilterTag = _productFilterTag === btn.dataset.tag ? '' : btn.dataset.tag;
+      _buildProductTagFilter();
+      _renderProducts();
+    })
+  );
+}
+
+function _renderProducts() {
+  const grid    = document.getElementById('products-grid');
+  const emptyEl = document.getElementById('products-empty');
+  const syncEl  = document.getElementById('last-sync-text');
+  const filterRow = document.getElementById('product-filter-row');
+
+  if (filterRow) filterRow.hidden = _products.length === 0;
+
+  const list = _getFilteredProducts();
+
+  if (!_products.length) {
     grid.hidden = true; emptyEl.hidden = false; return;
   }
 
-  const latest = products.find(p => p.first_seen_at);
-  if (latest) syncText.textContent = `${_relativeTime(latest.first_seen_at)}に更新`;
+  const latest = _products.find(p => p.first_seen_at);
+  if (latest && syncEl) syncEl.textContent = `${_relativeTime(latest.first_seen_at)}に更新`;
 
   grid.innerHTML = ''; grid.hidden = false; emptyEl.hidden = true;
-  products.forEach(p => {
+
+  if (!list.length) {
+    grid.innerHTML = '<p style="color:var(--text-muted);font-size:14px;padding:16px 0">該当する商品が見つかりません</p>';
+    return;
+  }
+
+  _buildProductTagFilter();
+
+  list.forEach(p => {
     const card = document.createElement('article');
     card.className = 'product-card';
-    const isBm = _bookmarks.has(p.id);
+    const isBm     = _bookmarks.has(p.id);
+    const status   = p.status || 'wishlist';
+    const statusCfg = STATUS_CONFIG[status] || STATUS_CONFIG.wishlist;
+    const tags     = parseTags(p.tags);
+
     card.innerHTML = `
       <button class="product-card__bm${isBm ? ' is-bm' : ''}" data-id="${p.id}" title="${isBm ? 'ブックマーク解除' : 'ブックマーク'}">${isBm ? '♥' : '♡'}</button>
       <a href="${escHtml(p.product_url || '#')}" target="_blank" rel="noopener noreferrer">
         <div class="product-card__image">
-          ${p.image_url ? `<img src="${escHtml(p.image_url)}" alt="${escHtml(p.name)}" loading="lazy">` : ''}
+          ${p.image_url
+            ? `<img src="${escHtml(p.image_url)}" alt="${escHtml(p.name)}" loading="lazy">`
+            : `<div class="product-card__placeholder">${escHtml(p.name.charAt(0).toUpperCase())}</div>`}
         </div>
         <div class="product-card__body">
           <p class="product-card__name">${escHtml(p.name)}</p>
           ${p.price ? `<p class="product-card__price">${escHtml(p.price)}</p>` : ''}
-          ${_parseTags(p.tags).length ? `<div class="tags-row" style="margin-top:4px">${_parseTags(p.tags).map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
+          ${tags.length ? `<div class="tags-row" style="margin-top:4px">${tags.map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
           ${p.notes ? `<p class="product-card__price" style="color:var(--text-light);margin-top:2px">${escHtml(p.notes)}</p>` : ''}
+          <div style="margin-top:6px">
+            <button class="status-badge ${escHtml(status)}" data-id="${p.id}" data-status="${escHtml(status)}">${statusCfg.label}</button>
+          </div>
         </div>
-      </a>`;
+      </a>
+      <div class="product-card__actions">
+        <button class="btn btn-ghost btn-sm js-edit" data-id="${p.id}">編集</button>
+        <button class="btn btn-danger-ghost btn-sm js-del" data-id="${p.id}">削除</button>
+      </div>`;
+
     const img = card.querySelector('img');
-    if (img) img.addEventListener('error', () => { img.parentElement.style.background = '#F0F0F0'; img.remove(); });
+    if (img) img.addEventListener('error', () => {
+      img.parentElement.innerHTML = `<div class="product-card__placeholder">${escHtml(p.name.charAt(0).toUpperCase())}</div>`;
+    });
+
     card.querySelector('.product-card__bm').addEventListener('click', e => {
       e.stopPropagation();
       _toggleBookmark(p.id, card.querySelector('.product-card__bm'));
     });
+
+    card.querySelector('.status-badge').addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      _cycleStatus(p.id, e.currentTarget);
+    });
+
+    card.querySelector('.js-edit').addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      _openProductModal(_products.find(x => x.id === p.id));
+    });
+
+    card.querySelector('.js-del').addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      _confirmDeleteProduct(p.id, p.name);
+    });
+
     grid.appendChild(card);
   });
+}
+
+async function _cycleStatus(productId, btn) {
+  const current = btn.dataset.status || 'wishlist';
+  const next    = STATUS_CONFIG[current]?.next || 'wishlist';
+  const sb      = await getSupabase();
+  const { error } = await sb.from('products').update({ status: next }).eq('id', productId);
+  if (error) { showToast('更新に失敗しました', 'error'); return; }
+  const prod = _products.find(p => p.id === productId);
+  if (prod) prod.status = next;
+  btn.className  = `status-badge ${next}`;
+  btn.dataset.status = next;
+  btn.textContent = STATUS_CONFIG[next].label;
 }
 
 async function _toggleBookmark(productId, btn) {
@@ -127,12 +229,33 @@ async function _toggleBookmark(productId, btn) {
     await sb.from('bookmarks').delete().eq('user_id', user.id).eq('product_id', productId);
     _bookmarks.delete(productId);
     btn.textContent = '♡'; btn.classList.remove('is-bm'); btn.title = 'ブックマーク';
+    showToast('ブックマークを解除しました', '', {
+      label: '元に戻す',
+      callback: async () => {
+        await sb.from('bookmarks').insert({ user_id: user.id, product_id: productId });
+        _bookmarks.add(productId);
+        btn.textContent = '♥'; btn.classList.add('is-bm'); btn.title = 'ブックマーク解除';
+      },
+    });
   } else {
     await sb.from('bookmarks').insert({ user_id: user.id, product_id: productId });
     _bookmarks.add(productId);
     btn.textContent = '♥'; btn.classList.add('is-bm'); btn.title = 'ブックマーク解除';
+    showToast('ブックマークしました');
   }
 }
+
+async function _confirmDeleteProduct(id, name) {
+  if (!confirm(`「${name}」を削除しますか？`)) return;
+  const sb = await getSupabase();
+  const { error } = await sb.from('products').delete().eq('id', id);
+  if (error) { showToast('削除に失敗しました', 'error'); return; }
+  _products = _products.filter(p => p.id !== id);
+  showToast('商品を削除しました');
+  _renderProducts();
+}
+
+/* ── Product Modal ── */
 
 const PRODUCT_TAG_PRESETS = ['トップス','ボトムス','アウター','ワンピース','シューズ','バッグ','アクセサリー','スポーツ','ストリート','ミニマル','ラグジュアリー','ヴィンテージ'];
 
@@ -153,14 +276,13 @@ function _suggestTags(text) {
     .map(([tag]) => tag);
 }
 
-function _applyTagSuggestions(productName) {
-  const suggested = _suggestTags(productName);
-  if (!suggested.length) return;
+function _applyTagSuggestions(name) {
   const el = document.getElementById('p-tags');
   if (!el) return;
+  const suggested = _suggestTags(name);
+  if (!suggested.length) return;
   const current = el.value.split(',').map(t => t.trim()).filter(Boolean);
-  const merged  = [...new Set([...current, ...suggested])];
-  el.value = merged.join(', ');
+  el.value = [...new Set([...current, ...suggested])].join(', ');
 }
 
 function _buildProductTagPresets() {
@@ -179,14 +301,23 @@ function _buildProductTagPresets() {
   );
 }
 
-function _openProductModal() {
-  ['p-url','p-name','p-price','p-image','p-tags','p-notes'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
+function _openProductModal(product = null) {
+  _editingProductId = product?.id ?? null;
+  const isEdit = !!_editingProductId;
+
+  document.querySelector('#p-modal-overlay .modal__title').textContent = isEdit ? '商品を編集' : '商品を追加';
+  document.getElementById('p-modal-save').textContent = isEdit ? '更新' : '追加';
+
+  const fields = { 'p-url': 'product_url', 'p-name': 'name', 'p-price': 'price', 'p-image': 'image_url', 'p-tags': 'tags', 'p-notes': 'notes' };
+  Object.entries(fields).forEach(([elId, key]) => {
+    const el = document.getElementById(elId);
+    if (el) el.value = (isEdit ? product?.[key] : '') ?? '';
   });
+
   document.getElementById('p-fetch-status').textContent = '';
   _buildProductTagPresets();
   document.getElementById('p-modal-overlay').classList.add('is-open');
-  setTimeout(() => document.getElementById('p-url').focus(), 60);
+  setTimeout(() => document.getElementById(isEdit ? 'p-name' : 'p-url').focus(), 60);
 }
 
 function _closeProductModal() {
@@ -217,7 +348,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => { location.href = '/'; }, 900);
   });
 
-  document.getElementById('add-product-btn')?.addEventListener('click', _openProductModal);
+  document.getElementById('product-search')?.addEventListener('input', e => {
+    _productFilterQ = e.target.value.trim();
+    _renderProducts();
+  });
+
+  document.getElementById('add-product-btn')?.addEventListener('click', () => _openProductModal());
   document.getElementById('p-modal-close')?.addEventListener('click', _closeProductModal);
   document.getElementById('p-modal-cancel')?.addEventListener('click', _closeProductModal);
   document.getElementById('p-modal-overlay')?.addEventListener('click', e => {
@@ -231,7 +367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const st  = document.getElementById('p-fetch-status');
     btn.disabled = true; btn.textContent = '取得中…'; st.textContent = ''; st.className = 'fetch-status';
     try {
-      const meta = await API.post('/api/fetch-meta', { url });
+      const meta   = await API.post('/api/fetch-meta', { url });
       const nameEl = document.getElementById('p-name');
       if (meta.title && !nameEl.value) nameEl.value = meta.title;
       if (meta.og_image_url) document.getElementById('p-image').value = meta.og_image_url;
@@ -247,28 +383,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('p-modal-save')?.addEventListener('click', async () => {
     const name = document.getElementById('p-name').value.trim();
     const url  = document.getElementById('p-url').value.trim();
-    if (!name || !url) { showToast('商品名とURLを入力してください', 'error'); return; }
+    if (!name) { showToast('商品名を入力してください', 'error'); return; }
+    if (!url && !_editingProductId) { showToast('URLを入力してください', 'error'); return; }
+
     const saveBtn = document.getElementById('p-modal-save');
-    saveBtn.disabled = true; saveBtn.textContent = '追加中…';
+    saveBtn.disabled = true; saveBtn.textContent = _editingProductId ? '更新中…' : '追加中…';
+
+    const payload = {
+      name,
+      product_url: url || null,
+      image_url:   document.getElementById('p-image').value.trim() || null,
+      price:       document.getElementById('p-price').value.trim() || null,
+      tags:        document.getElementById('p-tags').value.trim()  || null,
+      notes:       document.getElementById('p-notes').value.trim() || null,
+    };
+
     try {
       const sb = await getSupabase();
-      const { error } = await sb.from('products').insert({
-        brand_id:    _brand.id,
-        name,
-        product_url: url,
-        image_url:   document.getElementById('p-image').value.trim() || null,
-        price:       document.getElementById('p-price').value.trim() || null,
-        tags:        document.getElementById('p-tags').value.trim()  || null,
-        notes:       document.getElementById('p-notes').value.trim() || null,
-        is_manual:   true,
-      });
+      let error;
+      if (_editingProductId) {
+        ({ error } = await sb.from('products').update(payload).eq('id', _editingProductId));
+        if (!error) {
+          const idx = _products.findIndex(p => p.id === _editingProductId);
+          if (idx !== -1) _products[idx] = { ..._products[idx], ...payload };
+        }
+      } else {
+        ({ error } = await sb.from('products').insert({ ...payload, brand_id: _brand.id, is_manual: true }));
+        if (!error) await _reloadProducts();
+      }
       if (error) throw new Error(error.message);
       _closeProductModal();
-      showToast('商品を追加しました');
-      _load();
+      showToast(_editingProductId ? '商品を更新しました' : '商品を追加しました');
+      _renderProducts();
     } catch (err) {
-      showToast(err.message || '追加に失敗しました', 'error');
-      saveBtn.disabled = false; saveBtn.textContent = '追加';
+      showToast(err.message || '保存に失敗しました', 'error');
+      saveBtn.disabled = false;
+      saveBtn.textContent = _editingProductId ? '更新' : '追加';
     }
   });
 });
+
+async function _reloadProducts() {
+  const sb = await getSupabase();
+  const id = new URLSearchParams(location.search).get('id');
+  const { data } = await sb.from('products').select('*').eq('brand_id', id).order('first_seen_at', { ascending: false });
+  _products = data || [];
+}

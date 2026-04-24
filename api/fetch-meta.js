@@ -9,10 +9,23 @@ module.exports = async function handler(req, res) {
   const { url } = req.body ?? {};
   if (!url) return res.status(400).json({ error: 'url is required' });
 
-  let origin;
+  let origin, hostname;
   try {
-    origin = new URL(url).origin;
+    const parsed = new URL(url);
+    origin   = parsed.origin;
+    hostname = parsed.hostname.toLowerCase();
   } catch {
+    return res.status(400).json({ error: 'invalid url' });
+  }
+
+  const blocked = ['localhost','127.0.0.1','0.0.0.0','::1'];
+  if (
+    blocked.includes(hostname) ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('10.')      ||
+    hostname.startsWith('172.')     ||
+    hostname === '169.254.169.254'
+  ) {
     return res.status(400).json({ error: 'invalid url' });
   }
 

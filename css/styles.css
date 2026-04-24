@@ -374,6 +374,65 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-primar
 .bm-filter-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .bm-select { padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font); font-size: 13px; background: var(--surface); cursor: pointer; }
 
+/* ── PRODUCT CARD PLACEHOLDER ── */
+.product-card__placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #F2F2F2 0%, #E8E8E8 100%);
+  font-size: 28px; font-weight: 700; color: #C8C8C8;
+}
+
+/* ── PRODUCT CARD ACTIONS (edit/delete) ── */
+.product-card__actions {
+  display: flex; gap: 2px; padding: 0 6px 6px;
+  opacity: 0; transition: opacity var(--t);
+}
+.product-card:hover .product-card__actions { opacity: 1; }
+
+/* ── STATUS BADGE ── */
+.status-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500;
+  cursor: pointer; border: none; font-family: var(--font);
+  transition: opacity var(--t);
+}
+.status-badge:hover { opacity: 0.75; }
+.status-badge.wishlist    { background: #EFF6FF; color: #2563EB; }
+.status-badge.considering { background: #FEFCE8; color: #CA8A04; }
+.status-badge.purchased   { background: #F0FDF4; color: #16A34A; }
+
+/* ── TOAST ACTION BUTTON ── */
+.toast-action {
+  background: none; border: 1px solid rgba(255,255,255,0.45);
+  color: #FFF; padding: 2px 10px; border-radius: 3px;
+  cursor: pointer; font-size: 12px; margin-left: 10px;
+  font-family: var(--font); white-space: nowrap; transition: background var(--t);
+}
+.toast-action:hover { background: rgba(255,255,255,0.18); }
+
+/* ── BRAND NOTES BOX ── */
+.notes-box {
+  background: #F8F8F8; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 14px; margin-top: 10px;
+}
+.notes-box__label {
+  font-size: 11px; font-weight: 600; color: var(--text-light);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px;
+}
+.notes-box__text { font-size: 13px; line-height: 1.65; white-space: pre-wrap; color: var(--text-muted); }
+
+/* ── PRODUCT FILTER (brand detail) ── */
+.product-filter-row {
+  display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center;
+}
+.product-search-input {
+  flex: 1; min-width: 160px; padding: 7px 11px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: 13px; outline: none;
+  transition: border-color var(--t); background: var(--surface);
+}
+.product-search-input:focus { border-color: #A0A0A0; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .main-container { padding: 24px 16px; }

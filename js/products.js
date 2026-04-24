@@ -1,12 +1,11 @@
 let _products  = [];
 let _bookmarks = new Set();
-let _filterTag = '';
-let _filterQ   = '';
+let _filterTag    = '';
+let _filterStatus = '';
+let _filterQ      = '';
+let _sortKey      = 'newest';
 
-function _parseTags(str) {
-  if (!str) return [];
-  return str.split(',').map(t => t.trim()).filter(Boolean);
-}
+const STATUS_LABELS = { wishlist: '★ ほしい', considering: '？ 検討中', purchased: '✓ 購入済み' };
 
 async function _load() {
   const sb   = await getSupabase();
@@ -45,12 +44,12 @@ async function _load() {
 function _buildTagChips() {
   const row = document.getElementById('filter-row');
   if (!row) return;
-  const allTags = [...new Set(_products.flatMap(p => _parseTags(p.tags)))].sort();
+  const allTags = [...new Set(_products.flatMap(p => parseTags(p.tags)))].sort();
   if (!allTags.length) { row.innerHTML = ''; return; }
 
   row.innerHTML = [{ label: 'すべて', value: '' }, ...allTags.map(t => ({ label: t, value: t }))]
     .map(({ label, value }) =>
-      `<button class="filter-chip${_filterTag === value && (value !== '' || _filterTag === '') ? ' is-active' : ''}" data-tag="${escHtml(value)}">${escHtml(label)}</button>`
+      `<button class="filter-chip${_filterTag === value ? ' is-active' : ''}" data-tag="${escHtml(value)}">${escHtml(label)}</button>`
     ).join('');
 
   row.querySelectorAll('.filter-chip').forEach(btn =>
@@ -69,12 +68,18 @@ function _getFiltered() {
     list = list.filter(p =>
       p.name.toLowerCase().includes(q) ||
       (p.brands?.name || '').toLowerCase().includes(q) ||
-      _parseTags(p.tags).some(t => t.toLowerCase().includes(q))
+      parseTags(p.tags).some(t => t.toLowerCase().includes(q))
     );
   }
-  if (_filterTag) {
-    list = list.filter(p => _parseTags(p.tags).includes(_filterTag));
-  }
+  if (_filterTag)    list = list.filter(p => parseTags(p.tags).includes(_filterTag));
+  if (_filterStatus) list = list.filter(p => (p.status || 'wishlist') === _filterStatus);
+
+  list.sort((a, b) => {
+    if (_sortKey === 'name')    return a.name.localeCompare(b.name, 'ja');
+    if (_sortKey === 'brand')   return (a.brands?.name || '').localeCompare(b.brands?.name || '', 'ja');
+    if (_sortKey === 'oldest')  return new Date(a.first_seen_at) - new Date(b.first_seen_at);
+    return new Date(b.first_seen_at) - new Date(a.first_seen_at); // newest
+  });
   return list;
 }
 
@@ -85,7 +90,7 @@ function _render() {
   grid.innerHTML = '';
 
   if (!list.length) {
-    empty.hidden = false;
+    empty.hidden = _products.length > 0;
     if (_products.length) {
       empty.hidden = true;
       grid.innerHTML = '<p style="color:var(--text-muted);font-size:14px;padding:24px 0">該当する商品が見つかりません</p>';
@@ -99,25 +104,32 @@ function _render() {
     card.className = 'product-card';
     const isBm      = _bookmarks.has(p.id);
     const brandName = p.brands?.name || '';
-    const brandId   = p.brand_id;
-    const tags      = _parseTags(p.tags);
+    const tags      = parseTags(p.tags);
+    const status    = p.status || 'wishlist';
 
     card.innerHTML = `
       <button class="product-card__bm${isBm ? ' is-bm' : ''}" data-id="${p.id}" title="${isBm ? 'ブックマーク解除' : 'ブックマーク'}">${isBm ? '♥' : '♡'}</button>
       <a href="${escHtml(p.product_url || '#')}" target="_blank" rel="noopener noreferrer">
         <div class="product-card__image">
-          ${p.image_url ? `<img src="${escHtml(p.image_url)}" alt="${escHtml(p.name)}" loading="lazy">` : ''}
+          ${p.image_url
+            ? `<img src="${escHtml(p.image_url)}" alt="${escHtml(p.name)}" loading="lazy">`
+            : `<div class="product-card__placeholder">${escHtml(p.name.charAt(0).toUpperCase())}</div>`}
         </div>
         <div class="product-card__body">
-          ${brandName ? `<p class="product-card__brand"><a class="brand-link js-brand" href="/brand?id=${escHtml(brandId)}">${escHtml(brandName)}</a></p>` : ''}
+          ${brandName ? `<p class="product-card__brand"><a class="brand-link js-brand" href="/brand?id=${escHtml(p.brand_id)}">${escHtml(brandName)}</a></p>` : ''}
           <p class="product-card__name">${escHtml(p.name)}</p>
           ${p.price ? `<p class="product-card__price">${escHtml(p.price)}</p>` : ''}
           ${tags.length ? `<div class="tags-row">${tags.map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
+          <div style="margin-top:6px">
+            <span class="status-badge ${escHtml(status)}">${escHtml(STATUS_LABELS[status] || status)}</span>
+          </div>
         </div>
       </a>`;
 
     const img = card.querySelector('img');
-    if (img) img.addEventListener('error', () => { img.parentElement.style.background = '#F0F0F0'; img.remove(); });
+    if (img) img.addEventListener('error', () => {
+      img.parentElement.innerHTML = `<div class="product-card__placeholder">${escHtml(p.name.charAt(0).toUpperCase())}</div>`;
+    });
 
     card.querySelector('.product-card__bm').addEventListener('click', e => {
       e.stopPropagation();
@@ -139,10 +151,19 @@ async function _toggleBookmark(productId, btn) {
     await sb.from('bookmarks').delete().eq('user_id', user.id).eq('product_id', productId);
     _bookmarks.delete(productId);
     btn.textContent = '♡'; btn.classList.remove('is-bm'); btn.title = 'ブックマーク';
+    showToast('ブックマークを解除しました', '', {
+      label: '元に戻す',
+      callback: async () => {
+        await sb.from('bookmarks').insert({ user_id: user.id, product_id: productId });
+        _bookmarks.add(productId);
+        btn.textContent = '♥'; btn.classList.add('is-bm'); btn.title = 'ブックマーク解除';
+      },
+    });
   } else {
     await sb.from('bookmarks').insert({ user_id: user.id, product_id: productId });
     _bookmarks.add(productId);
     btn.textContent = '♥'; btn.classList.add('is-bm'); btn.title = 'ブックマーク解除';
+    showToast('ブックマークしました');
   }
 }
 
@@ -156,6 +177,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('search-input')?.addEventListener('input', e => {
     _filterQ = e.target.value.trim();
+    _render();
+  });
+  document.getElementById('sort-select')?.addEventListener('change', e => {
+    _sortKey = e.target.value;
+    _render();
+  });
+  document.getElementById('status-select')?.addEventListener('change', e => {
+    _filterStatus = e.target.value;
     _render();
   });
 
