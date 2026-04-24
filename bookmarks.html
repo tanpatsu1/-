@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ブックマーク — Brand Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a href="/" class="site-title">Brand <span>Manager</span></a>
+      <nav class="site-nav">
+        <a href="/products" class="site-nav__link">商品一覧</a>
+        <a href="/bookmarks" class="site-nav__link is-active">ブックマーク</a>
+      </nav>
+      <div class="header-right">
+        <span class="user-name" id="user-name"></span>
+        <button class="btn btn-ghost btn-sm" id="logout-btn">ログアウト</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="section-header">
+      <h1 class="section-title" id="page-title">ブックマーク</h1>
+    </div>
+    <div class="bm-filter-row">
+      <select class="bm-select" id="brand-filter">
+        <option value="">すべてのブランド</option>
+      </select>
+      <select class="bm-select" id="tag-filter">
+        <option value="">すべてのタグ</option>
+      </select>
+    </div>
+
+    <div id="products-grid" class="products-grid"></div>
+    <div id="empty-state" class="empty-state" hidden>
+      <div class="empty-state__icon">♡</div>
+      <h2 class="empty-state__title">ブックマークがありません</h2>
+      <p class="empty-state__text">商品一覧や各ブランドページから♡をタップしてブックマークできます。</p>
+      <a href="/products" class="btn btn-primary">商品一覧へ</a>
+    </div>
+  </main>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/bookmarks.js"></script>
+</body>
+</html>

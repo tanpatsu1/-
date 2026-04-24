@@ -136,6 +136,33 @@ async function _toggleBookmark(productId, btn) {
 
 const PRODUCT_TAG_PRESETS = ['トップス','ボトムス','アウター','ワンピース','シューズ','バッグ','アクセサリー','スポーツ','ストリート','ミニマル','ラグジュアリー','ヴィンテージ'];
 
+const TAG_KEYWORDS = {
+  'トップス':     ['tシャツ','t-shirt','shirt','シャツ','ニット','knit','カットソー','タンク','ブラウス','polo','ポロ','tops'],
+  'ボトムス':     ['パンツ','デニム','jeans','スカート','skirt','ショーツ','shorts','スラックス','chino','チノ'],
+  'アウター':     ['コート','coat','ジャケット','jacket','ブルゾン','blouson','パーカー','hoodie','カーディガン','cardigan','vest','ベスト','アウター'],
+  'ワンピース':   ['ワンピース','dress','ドレス','サロペット'],
+  'シューズ':     ['シューズ','スニーカー','sneaker','boots','ブーツ','サンダル','sandal','ローファー','loafer','靴','shoe'],
+  'バッグ':       ['バッグ','bag','トート','tote','ショルダー','shoulder','リュック','backpack','クラッチ','財布','wallet'],
+  'アクセサリー': ['アクセサリー','ネックレス','リング','ピアス','ベルト','belt','帽子','hat','cap','スカーフ','scarf','サングラス'],
+};
+
+function _suggestTags(text) {
+  const lower = text.toLowerCase();
+  return Object.entries(TAG_KEYWORDS)
+    .filter(([, kws]) => kws.some(kw => lower.includes(kw)))
+    .map(([tag]) => tag);
+}
+
+function _applyTagSuggestions(productName) {
+  const suggested = _suggestTags(productName);
+  if (!suggested.length) return;
+  const el = document.getElementById('p-tags');
+  if (!el) return;
+  const current = el.value.split(',').map(t => t.trim()).filter(Boolean);
+  const merged  = [...new Set([...current, ...suggested])];
+  el.value = merged.join(', ');
+}
+
 function _buildProductTagPresets() {
   const wrap = document.getElementById('p-tag-presets');
   if (!wrap) return;
@@ -205,8 +232,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.disabled = true; btn.textContent = '取得中…'; st.textContent = ''; st.className = 'fetch-status';
     try {
       const meta = await API.post('/api/fetch-meta', { url });
-      if (meta.title && !document.getElementById('p-name').value) document.getElementById('p-name').value = meta.title;
+      const nameEl = document.getElementById('p-name');
+      if (meta.title && !nameEl.value) nameEl.value = meta.title;
       if (meta.og_image_url) document.getElementById('p-image').value = meta.og_image_url;
+      _applyTagSuggestions(nameEl.value);
       st.textContent = '情報を取得しました ✓'; st.className = 'fetch-status ok';
     } catch {
       st.textContent = '取得できませんでした。手動で入力してください'; st.className = 'fetch-status err';

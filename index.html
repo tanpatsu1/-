@@ -13,6 +13,10 @@
   <header class="site-header">
     <div class="site-header__inner">
       <a href="/" class="site-title">Brand <span>Manager</span></a>
+      <nav class="site-nav">
+        <a href="/products" class="site-nav__link">商品一覧</a>
+        <a href="/bookmarks" class="site-nav__link">ブックマーク</a>
+      </nav>
       <div class="header-right">
         <span class="user-name" id="user-name"></span>
         <button class="btn btn-ghost btn-sm" id="logout-btn">ログアウト</button>
@@ -24,6 +28,10 @@
   <main class="main-container">
     <div class="section-header">
       <h1 class="section-title" id="page-title">ブランド一覧</h1>
+      <div class="view-toggle">
+        <button class="view-btn is-active" id="view-card" title="カード表示">⊞</button>
+        <button class="view-btn" id="view-list" title="リスト表示">☰</button>
+      </div>
     </div>
     <div class="search-sort-row">
       <input class="search-input" type="search" id="search-input" placeholder="ブランドを検索…">
