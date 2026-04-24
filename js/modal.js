@@ -24,7 +24,6 @@ function openModal(mode, brand, onSave) {
     _set('f-logo',        brand.logo_url     ?? '');
     _set('f-og-image',    brand.og_image_url ?? '');
     _set('f-tags',        brand.tags         ?? '');
-    _set('f-memo',        brand.memo         ?? '');
   }
 
   document.getElementById('modal-overlay').classList.add('is-open');
@@ -41,7 +40,6 @@ function _resetForm() {
   if (fs) { fs.textContent = ''; fs.className = 'fetch-status'; }
   _set('f-og-image', '');
   _set('f-tags', '');
-  _set('f-memo', '');
 }
 
 function _buildTagPresets() {
@@ -125,7 +123,6 @@ async function _handleSave() {
     logo_url:     document.getElementById('f-logo')?.value.trim()        || null,
     og_image_url: document.getElementById('f-og-image')?.value.trim()    || null,
     tags:         document.getElementById('f-tags')?.value.trim()        || null,
-    memo:         document.getElementById('f-memo')?.value.trim()        || null,
   };
 
   const saveBtn = document.getElementById('modal-save');

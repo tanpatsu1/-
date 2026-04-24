@@ -73,15 +73,6 @@ function _renderDetail(brand) {
   desc.textContent = brand.description || '';
   desc.hidden = !brand.description;
 
-  const memoBox  = document.getElementById('detail-memo');
-  const memoText = document.getElementById('detail-memo-text');
-  if (brand.memo) {
-    memoText.textContent = brand.memo;
-    memoBox.hidden = false;
-  } else {
-    memoBox.hidden = true;
-  }
-
   const urlEl = document.getElementById('detail-url');
   urlEl.href   = brand.url;
   urlEl.hidden = !brand.url;
@@ -113,6 +104,7 @@ function _renderProducts(products) {
         <div class="product-card__body">
           <p class="product-card__name">${escHtml(p.name)}</p>
           ${p.price ? `<p class="product-card__price">${escHtml(p.price)}</p>` : ''}
+          ${_parseTags(p.tags).length ? `<div class="tags-row" style="margin-top:4px">${_parseTags(p.tags).map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
           ${p.notes ? `<p class="product-card__price" style="color:var(--text-light);margin-top:2px">${escHtml(p.notes)}</p>` : ''}
         </div>
       </a>`;
@@ -142,11 +134,30 @@ async function _toggleBookmark(productId, btn) {
   }
 }
 
+const PRODUCT_TAG_PRESETS = ['トップス','ボトムス','アウター','ワンピース','シューズ','バッグ','アクセサリー','スポーツ','ストリート','ミニマル','ラグジュアリー','ヴィンテージ'];
+
+function _buildProductTagPresets() {
+  const wrap = document.getElementById('p-tag-presets');
+  if (!wrap) return;
+  wrap.innerHTML = PRODUCT_TAG_PRESETS.map(t =>
+    `<button type="button" class="tag-preset-btn" data-tag="${t}">${t}</button>`
+  ).join('');
+  wrap.querySelectorAll('.tag-preset-btn').forEach(btn =>
+    btn.addEventListener('click', () => {
+      const el = document.getElementById('p-tags');
+      if (!el) return;
+      const current = el.value.split(',').map(t => t.trim()).filter(Boolean);
+      if (!current.includes(btn.dataset.tag)) el.value = [...current, btn.dataset.tag].join(', ');
+    })
+  );
+}
+
 function _openProductModal() {
-  ['p-url','p-name','p-price','p-image','p-notes'].forEach(id => {
+  ['p-url','p-name','p-price','p-image','p-tags','p-notes'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   document.getElementById('p-fetch-status').textContent = '';
+  _buildProductTagPresets();
   document.getElementById('p-modal-overlay').classList.add('is-open');
   setTimeout(() => document.getElementById('p-url').focus(), 60);
 }
@@ -218,6 +229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         product_url: url,
         image_url:   document.getElementById('p-image').value.trim() || null,
         price:       document.getElementById('p-price').value.trim() || null,
+        tags:        document.getElementById('p-tags').value.trim()  || null,
         notes:       document.getElementById('p-notes').value.trim() || null,
         is_manual:   true,
       });

@@ -3,8 +3,7 @@
 -- Run in: Supabase Dashboard → SQL Editor → New Query
 -- ============================================================
 
--- brands: memo + tags
-ALTER TABLE brands ADD COLUMN IF NOT EXISTS memo TEXT;
+-- brands: tags
 ALTER TABLE brands ADD COLUMN IF NOT EXISTS tags TEXT;
 
 -- products: tags, notes, is_manual flag
