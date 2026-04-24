@@ -1,5 +1,10 @@
 let _brands = [];
 let _user   = null;
+let _filterTag  = '';
+let _filterQ    = '';
+let _sortKey    = 'name';
+
+const PRICE_ORDER = { '$': 1, '$$': 2, '$$$': 3, '$$$$': 4 };
 
 async function loadBrands() {
   const sb    = await getSupabase();
@@ -20,15 +25,68 @@ async function loadBrands() {
   }
 
   _brands = data || [];
-  grid.innerHTML = '';
   title.textContent = `ブランド一覧${_brands.length ? `（${_brands.length}件）` : ''}`;
+  _buildFilterChips();
+  _render();
+  empty.hidden = _brands.length > 0;
+}
 
-  if (_brands.length === 0) {
-    empty.hidden = false;
-  } else {
-    empty.hidden = true;
-    _brands.forEach(b => grid.appendChild(_buildCard(b)));
+function _parseTags(str) {
+  if (!str) return [];
+  return str.split(',').map(t => t.trim()).filter(Boolean);
+}
+
+function _buildFilterChips() {
+  const row = document.getElementById('filter-row');
+  if (!row) return;
+  const allTags = [...new Set(_brands.flatMap(b => _parseTags(b.tags)))].sort();
+  if (!allTags.length) { row.innerHTML = ''; return; }
+  row.innerHTML = allTags.map(t =>
+    `<button class="filter-chip${_filterTag === t ? ' is-active' : ''}" data-tag="${escHtml(t)}">${escHtml(t)}</button>`
+  ).join('');
+  row.querySelectorAll('.filter-chip').forEach(btn =>
+    btn.addEventListener('click', () => {
+      _filterTag = _filterTag === btn.dataset.tag ? '' : btn.dataset.tag;
+      _buildFilterChips();
+      _render();
+    })
+  );
+}
+
+function _getFiltered() {
+  let list = _brands.slice();
+  if (_filterQ) {
+    const q = _filterQ.toLowerCase();
+    list = list.filter(b =>
+      b.name.toLowerCase().includes(q) ||
+      (b.style || '').toLowerCase().includes(q) ||
+      (_parseTags(b.tags).some(t => t.toLowerCase().includes(q)))
+    );
   }
+  if (_filterTag) {
+    list = list.filter(b => _parseTags(b.tags).includes(_filterTag));
+  }
+  list.sort((a, b) => {
+    if (_sortKey === 'newest')     return new Date(b.created_at) - new Date(a.created_at);
+    if (_sortKey === 'price_asc')  return (PRICE_ORDER[a.price_range] || 0) - (PRICE_ORDER[b.price_range] || 0);
+    if (_sortKey === 'price_desc') return (PRICE_ORDER[b.price_range] || 0) - (PRICE_ORDER[a.price_range] || 0);
+    return a.name.localeCompare(b.name, 'ja');
+  });
+  return list;
+}
+
+function _render() {
+  const grid  = document.getElementById('brands-grid');
+  const empty = document.getElementById('empty-state');
+  const list  = _getFiltered();
+  grid.innerHTML = '';
+  if (!list.length) {
+    empty.hidden = _brands.length === 0;
+    if (_brands.length) grid.innerHTML = '<p style="color:var(--text-muted);font-size:14px;padding:24px 0">該当するブランドが見つかりません</p>';
+    return;
+  }
+  empty.hidden = true;
+  list.forEach(b => grid.appendChild(_buildCard(b)));
 }
 
 function _buildCard(brand) {
@@ -38,6 +96,7 @@ function _buildCard(brand) {
 
   const imgUrl  = brand.og_image_url || brand.logo_url;
   const initial = escHtml(brand.name.charAt(0).toUpperCase());
+  const tags    = _parseTags(brand.tags);
 
   article.innerHTML = `
     <div class="brand-card__image js-nav">
@@ -52,6 +111,7 @@ function _buildCard(brand) {
         ${brand.style       ? `<span class="badge badge-style">${escHtml(brand.style)}</span>` : ''}
         ${brand.price_range ? `<span class="badge badge-price">${escHtml(brand.price_range)}</span>` : ''}
       </div>
+      ${tags.length ? `<div class="tags-row" style="margin-top:6px">${tags.map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
     </div>
     <div class="brand-card__actions">
       <button class="btn btn-ghost btn-sm js-edit"   data-id="${brand.id}">編集</button>
@@ -92,13 +152,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   _user = await requireAuth();
   if (!_user) return;
 
-  // Show user name
   const nameEl = document.getElementById('user-name');
   if (nameEl) nameEl.textContent = _user.user_metadata?.full_name || _user.email || '';
 
   document.getElementById('logout-btn')?.addEventListener('click', signOut);
   document.getElementById('add-brand-btn').addEventListener('click', () => openModal('add', null, () => loadBrands()));
   document.getElementById('empty-add-btn')?.addEventListener('click', () => openModal('add', null, () => loadBrands()));
+
+  document.getElementById('search-input')?.addEventListener('input', e => {
+    _filterQ = e.target.value.trim();
+    _render();
+  });
+
+  document.getElementById('sort-select')?.addEventListener('change', e => {
+    _sortKey = e.target.value;
+    _render();
+  });
 
   loadBrands();
 });

@@ -31,6 +31,19 @@
         </div>
         <button class="btn btn-primary" id="login-btn" style="width:100%">ログイン</button>
         <p class="fetch-status" id="login-status" style="margin-top:12px;text-align:center"></p>
+        <p style="text-align:center;margin-top:10px"><button type="button" class="btn-link" id="to-forgot">パスワードをお忘れの方</button></p>
+      </div>
+
+      <!-- パスワードリセット -->
+      <div id="pane-forgot" hidden>
+        <p class="login-subtitle">登録済みのメールアドレスを入力してください</p>
+        <div class="form-group" style="margin-bottom:12px;text-align:left">
+          <label class="form-label" for="f-email">メールアドレス</label>
+          <input class="form-input" type="email" id="f-email" autocomplete="email">
+        </div>
+        <button class="btn btn-primary" id="forgot-btn" style="width:100%">リセットリンクを送る</button>
+        <button class="btn btn-ghost btn-sm" id="forgot-back-btn" style="width:100%;margin-top:8px">← 戻る</button>
+        <p class="fetch-status" id="forgot-status" style="margin-top:12px;text-align:center"></p>
       </div>
 
       <!-- 新規登録 -->
@@ -119,6 +132,36 @@
       }
       document.getElementById('signup-btn').addEventListener('click', doSignup);
       document.getElementById('s-pass2').addEventListener('keydown', e => { if (e.key === 'Enter') doSignup(); });
+
+      // Forgot password
+      function showForgot() {
+        [paneLogin, paneSignup].forEach(p => p.hidden = true);
+        document.getElementById('pane-forgot').hidden = false;
+        [tabLogin, tabSignup].forEach(t => t.classList.remove('is-active'));
+      }
+      document.getElementById('forgot-back-btn').addEventListener('click', () => {
+        document.getElementById('pane-forgot').hidden = true;
+        paneLogin.hidden = false; tabLogin.classList.add('is-active');
+      });
+      const forgotStatus = document.getElementById('forgot-status');
+      document.getElementById('forgot-btn').addEventListener('click', async () => {
+        const email = document.getElementById('f-email').value.trim();
+        if (!email) { forgotStatus.textContent = 'メールアドレスを入力してください'; forgotStatus.className = 'fetch-status err'; return; }
+        const btn = document.getElementById('forgot-btn');
+        btn.disabled = true; btn.textContent = '送信中…';
+        try {
+          await resetPasswordForEmail(email);
+          forgotStatus.textContent = 'リセットリンクを送りました。メールを確認してください。';
+          forgotStatus.className = 'fetch-status ok';
+        } catch (err) {
+          forgotStatus.textContent = err.message || '送信に失敗しました';
+          forgotStatus.className = 'fetch-status err';
+          btn.disabled = false; btn.textContent = 'リセットリンクを送る';
+        }
+      });
+
+      // "パスワードをお忘れの方" link under login form
+      document.getElementById('to-forgot')?.addEventListener('click', showForgot);
     });
   </script>
 </body>

@@ -25,6 +25,17 @@
     <div class="section-header">
       <h1 class="section-title" id="page-title">ブランド一覧</h1>
     </div>
+    <div class="search-sort-row">
+      <input class="search-input" type="search" id="search-input" placeholder="ブランドを検索…">
+      <select class="sort-select" id="sort-select">
+        <option value="name">名前順</option>
+        <option value="newest">登録が新しい順</option>
+        <option value="price_asc">価格帯：低→高</option>
+        <option value="price_desc">価格帯：高→低</option>
+      </select>
+    </div>
+    <div class="filter-row" id="filter-row"></div>
+
     <div id="brands-grid" class="brands-grid"></div>
     <div id="empty-state" class="empty-state" hidden>
       <div class="empty-state__icon">👗</div>
@@ -78,6 +89,15 @@
           <div class="form-group">
             <label class="form-label" for="f-logo">ロゴ / 画像URL <span class="opt">（自動入力）</span></label>
             <input class="form-input" type="url" id="f-logo" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-tags">タグ <span class="opt">（任意・カンマ区切り）</span></label>
+            <input class="form-input" type="text" id="f-tags" placeholder="例: アウター, ミニマル">
+            <div class="tag-presets" id="tag-presets"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-memo">メモ <span class="opt">（任意）</span></label>
+            <textarea class="form-textarea" id="f-memo" rows="2" placeholder="セール時期、サイズ感など"></textarea>
           </div>
           <input type="hidden" id="f-og-image">
         </form>

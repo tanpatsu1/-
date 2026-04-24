@@ -38,6 +38,20 @@ async function signInWithPassword(email, password) {
   if (error) throw new Error(error.message);
 }
 
+async function resetPasswordForEmail(email) {
+  const client = await _initClient();
+  const { error } = await client.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/reset-password',
+  });
+  if (error) throw new Error(error.message);
+}
+
+async function updatePassword(password) {
+  const client = await _initClient();
+  const { error } = await client.auth.updateUser({ password });
+  if (error) throw new Error(error.message);
+}
+
 async function signOut() {
   const client = await _initClient();
   await client.auth.signOut();

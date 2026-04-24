@@ -2,6 +2,8 @@ let _modalMode = 'add';
 let _editingId = null;
 let _onSave    = null;
 
+const TAG_PRESETS = ['トップス','ボトムス','アウター','ワンピース','シューズ','バッグ','アクセサリー','スポーツ','ストリート','ミニマル','ラグジュアリー','ヴィンテージ'];
+
 function openModal(mode, brand, onSave) {
   _modalMode = mode;
   _editingId = brand?.id ?? null;
@@ -11,6 +13,7 @@ function openModal(mode, brand, onSave) {
   if (title) title.textContent = mode === 'edit' ? 'ブランドを編集' : 'ブランドを追加';
 
   _resetForm();
+  _buildTagPresets();
 
   if (mode === 'edit' && brand) {
     _set('f-url',         brand.url          ?? '');
@@ -20,6 +23,8 @@ function openModal(mode, brand, onSave) {
     _set('f-price',       brand.price_range  ?? '');
     _set('f-logo',        brand.logo_url     ?? '');
     _set('f-og-image',    brand.og_image_url ?? '');
+    _set('f-tags',        brand.tags         ?? '');
+    _set('f-memo',        brand.memo         ?? '');
   }
 
   document.getElementById('modal-overlay').classList.add('is-open');
@@ -35,6 +40,26 @@ function _resetForm() {
   const fs = document.getElementById('fetch-status');
   if (fs) { fs.textContent = ''; fs.className = 'fetch-status'; }
   _set('f-og-image', '');
+  _set('f-tags', '');
+  _set('f-memo', '');
+}
+
+function _buildTagPresets() {
+  const wrap = document.getElementById('tag-presets');
+  if (!wrap) return;
+  wrap.innerHTML = TAG_PRESETS.map(t =>
+    `<button type="button" class="tag-preset-btn" data-tag="${t}">${t}</button>`
+  ).join('');
+  wrap.querySelectorAll('.tag-preset-btn').forEach(btn =>
+    btn.addEventListener('click', () => _addTag(btn.dataset.tag))
+  );
+}
+
+function _addTag(tag) {
+  const el = document.getElementById('f-tags');
+  if (!el) return;
+  const current = el.value.split(',').map(t => t.trim()).filter(Boolean);
+  if (!current.includes(tag)) el.value = [...current, tag].join(', ');
 }
 
 function _set(id, val) {
@@ -99,6 +124,8 @@ async function _handleSave() {
     price_range:  document.getElementById('f-price')?.value              || null,
     logo_url:     document.getElementById('f-logo')?.value.trim()        || null,
     og_image_url: document.getElementById('f-og-image')?.value.trim()    || null,
+    tags:         document.getElementById('f-tags')?.value.trim()        || null,
+    memo:         document.getElementById('f-memo')?.value.trim()        || null,
   };
 
   const saveBtn = document.getElementById('modal-save');

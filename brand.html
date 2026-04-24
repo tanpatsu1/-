@@ -47,7 +47,12 @@
         <div class="brand-detail-info">
           <h1 id="detail-name"></h1>
           <div class="brand-detail-meta" id="detail-meta"></div>
+          <div class="tags-row" id="detail-tags"></div>
           <p class="brand-detail-description" id="detail-description"></p>
+          <div class="memo-box" id="detail-memo" hidden>
+            <div class="memo-box__label">メモ</div>
+            <div class="memo-box__text" id="detail-memo-text"></div>
+          </div>
           <a class="brand-official-link" id="detail-url" target="_blank" rel="noopener noreferrer" hidden>公式サイト ↗</a>
           <div class="brand-detail-actions">
             <button class="btn btn-secondary" id="detail-edit-btn">編集</button>
@@ -58,19 +63,21 @@
 
       <div class="products-section">
         <div class="products-section-header">
-          <h2>新着商品</h2>
+          <h2>商品</h2>
           <span class="last-sync-text" id="last-sync-text"></span>
+          <button class="btn btn-secondary btn-sm" id="add-product-btn" style="margin-left:auto">＋ 手動追加</button>
         </div>
         <div id="products-grid" class="products-grid"></div>
         <div id="products-empty" class="empty-state" hidden>
           <div class="empty-state__icon">📦</div>
           <p class="empty-state__title">商品情報がまだありません</p>
-          <p class="empty-state__text">毎日6時（UTC）の自動取得後に表示されます。</p>
+          <p class="empty-state__text">毎日6時（UTC）の自動取得後に表示されます。または「手動追加」で登録できます。</p>
         </div>
       </div>
     </div>
   </main>
 
+  <!-- Brand edit modal -->
   <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal">
       <div class="modal__header">
@@ -115,12 +122,61 @@
             <label class="form-label" for="f-logo">ロゴ / 画像URL <span class="opt">（自動入力）</span></label>
             <input class="form-input" type="url" id="f-logo">
           </div>
+          <div class="form-group">
+            <label class="form-label" for="f-tags">タグ <span class="opt">（任意・カンマ区切り）</span></label>
+            <input class="form-input" type="text" id="f-tags" placeholder="例: アウター, ミニマル">
+            <div class="tag-presets" id="tag-presets"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-memo">メモ <span class="opt">（任意）</span></label>
+            <textarea class="form-textarea" id="f-memo" rows="2" placeholder="セール時期、サイズ感など"></textarea>
+          </div>
           <input type="hidden" id="f-og-image">
         </form>
       </div>
       <div class="modal__footer">
         <button type="button" class="btn btn-secondary" id="modal-cancel">キャンセル</button>
         <button type="button" class="btn btn-primary" id="modal-save">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product add modal -->
+  <div class="p-modal-overlay" id="p-modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal__header">
+        <h2 class="modal__title">商品を追加</h2>
+        <button class="modal__close" id="p-modal-close" aria-label="閉じる">×</button>
+      </div>
+      <div class="modal__body">
+        <div class="form-group">
+          <label class="form-label" for="p-url">商品URL</label>
+          <div class="url-row">
+            <input class="form-input" type="url" id="p-url" placeholder="https://...">
+            <button type="button" class="btn btn-secondary btn-sm" id="p-fetch-btn">情報を取得</button>
+          </div>
+          <div class="fetch-status" id="p-fetch-status"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="p-name">商品名</label>
+          <input class="form-input" type="text" id="p-name">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="p-price">価格 <span class="opt">（任意）</span></label>
+          <input class="form-input" type="text" id="p-price" placeholder="例: ¥12,000">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="p-image">画像URL <span class="opt">（自動入力）</span></label>
+          <input class="form-input" type="url" id="p-image">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="p-notes">メモ <span class="opt">（任意）</span></label>
+          <textarea class="form-textarea" id="p-notes" rows="2" placeholder="気になったポイントなど"></textarea>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn-secondary" id="p-modal-cancel">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="p-modal-save">追加</button>
       </div>
     </div>
   </div>
