@@ -334,4 +334,17 @@ body { font-family: var(--font); background: var(--bg); color: var(--text-primar
   .products-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .brand-card { min-width: 0; }
   .brand-card__name { font-size: 13px; }
+
+  /* Header: hide user name, shrink add button to icon only */
+  .user-name { display: none; }
+  #add-brand-btn { font-size: 0; padding: 7px 10px; min-width: 34px; }
+  #add-brand-btn::before { content: '＋'; font-size: 16px; line-height: 1; }
+
+  /* Products section header: wrap onto two lines */
+  .products-section-header { flex-wrap: wrap; }
+  .products-section-header #add-product-btn { margin-left: 0 !important; width: 100%; justify-content: center; margin-top: 8px; }
+
+  /* Search/sort row: stack vertically */
+  .search-sort-row { flex-direction: column; }
+  .sort-select { width: 100%; }
 }
