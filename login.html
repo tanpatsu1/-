@@ -53,12 +53,12 @@
         status.textContent = '';
         status.className = 'fetch-status';
 
-        const ok = await sendMagicLink(email);
-        if (ok) {
+        try {
+          await sendMagicLink(email);
           document.getElementById('login-form').hidden = true;
           document.getElementById('login-sent').hidden = false;
-        } else {
-          status.textContent = '送信に失敗しました。もう一度お試しください';
+        } catch (err) {
+          status.textContent = err.message || '送信に失敗しました';
           status.className = 'fetch-status err';
           btn.disabled = false;
           btn.textContent = 'ログインリンクを送る';
