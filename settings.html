@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>設定 — Brand Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a href="/" class="site-title">Brand <span>Manager</span></a>
+      <nav class="site-nav">
+        <a href="/products"  class="site-nav__link">商品一覧</a>
+        <a href="/bookmarks" class="site-nav__link">ブックマーク</a>
+        <a href="/settings"  class="site-nav__link is-active">設定</a>
+      </nav>
+      <div class="header-right">
+        <span class="user-name" id="user-name"></span>
+        <button class="btn btn-ghost btn-sm" id="logout-btn">ログアウト</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="section-header">
+      <h1 class="section-title">設定</h1>
+    </div>
+
+    <div class="settings-section">
+      <h2 class="settings-section-title">ジャンル管理</h2>
+      <p class="settings-section-desc">ブランドに付けるジャンルを管理します。ブランドの追加・編集モーダルから選択できます。</p>
+
+      <div class="genre-add-row">
+        <input class="form-input" type="text" id="genre-input" placeholder="新しいジャンル名（例：ストリート）" maxlength="40">
+        <button class="btn btn-primary btn-sm" id="genre-add-btn">追加</button>
+      </div>
+
+      <div id="genre-list" class="genre-list">
+        <div class="genre-empty">読み込み中...</div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/settings.js"></script>
+</body>
+</html>

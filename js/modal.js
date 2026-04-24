@@ -1,13 +1,15 @@
 let _modalMode = 'add';
 let _editingId = null;
 let _onSave    = null;
+let _selectedGenreIds = new Set();
 
 const TAG_PRESETS = ['トップス','ボトムス','アウター','ワンピース','シューズ','バッグ','アクセサリー','スポーツ','ストリート','ミニマル','ラグジュアリー','ヴィンテージ'];
 
-function openModal(mode, brand, onSave) {
+async function openModal(mode, brand, onSave) {
   _modalMode = mode;
   _editingId = brand?.id ?? null;
   _onSave    = onSave ?? null;
+  _selectedGenreIds = new Set();
 
   const title = document.getElementById('modal-title');
   if (title) title.textContent = mode === 'edit' ? 'ブランドを編集' : 'ブランドを追加';
@@ -19,7 +21,6 @@ function openModal(mode, brand, onSave) {
     _set('f-url',         brand.url          ?? '');
     _set('f-name',        brand.name         ?? '');
     _set('f-description', brand.description  ?? '');
-    _set('f-style',       brand.style        ?? '');
     _set('f-price',       brand.price_range  ?? '');
     _set('f-logo',        brand.logo_url     ?? '');
     _set('f-og-image',    brand.og_image_url ?? '');
@@ -29,6 +30,8 @@ function openModal(mode, brand, onSave) {
 
   document.getElementById('modal-overlay').classList.add('is-open');
   setTimeout(() => document.getElementById('f-url')?.focus(), 60);
+
+  await _loadGenreChips(mode === 'edit' ? brand?.id : null);
 }
 
 function closeModal() {
@@ -36,12 +39,15 @@ function closeModal() {
 }
 
 function _resetForm() {
+  _selectedGenreIds = new Set();
   document.getElementById('brand-form')?.reset();
   const fs = document.getElementById('fetch-status');
   if (fs) { fs.textContent = ''; fs.className = 'fetch-status'; }
   _set('f-og-image', '');
   _set('f-tags', '');
   _set('f-notes', '');
+  const genreChips = document.getElementById('genre-chips');
+  if (genreChips) genreChips.innerHTML = '<span style="font-size:12px;color:var(--text-light)">読み込み中...</span>';
 }
 
 function _buildTagPresets() {
@@ -60,6 +66,54 @@ function _addTag(tag) {
   if (!el) return;
   const current = el.value.split(',').map(t => t.trim()).filter(Boolean);
   if (!current.includes(tag)) el.value = [...current, tag].join(', ');
+}
+
+async function _loadGenreChips(brandId) {
+  const wrap = document.getElementById('genre-chips');
+  if (!wrap) return;
+  try {
+    const sb   = await getSupabase();
+    const user = await getCurrentUser();
+    if (!user) { wrap.innerHTML = ''; return; }
+
+    const [{ data: genres, error: ge }, { data: bgs }] = await Promise.all([
+      sb.from('genres').select('id, name, sort_order').eq('user_id', user.id).order('sort_order').order('name'),
+      brandId
+        ? sb.from('brand_genres').select('genre_id').eq('brand_id', brandId)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    if (ge) throw ge;
+    _selectedGenreIds = new Set((bgs || []).map(bg => bg.genre_id));
+    _renderGenreChips(genres || []);
+  } catch {
+    wrap.innerHTML = '<span style="font-size:12px;color:var(--text-light)">読み込みに失敗しました</span>';
+  }
+}
+
+function _renderGenreChips(genres) {
+  const wrap = document.getElementById('genre-chips');
+  if (!wrap) return;
+  if (!genres.length) {
+    wrap.innerHTML = '<span style="font-size:12px;color:var(--text-light)">ジャンルがありません。<a href="/settings" target="_blank" style="color:var(--text-muted)">設定</a>から追加できます。</span>';
+    return;
+  }
+  wrap.innerHTML = genres.map(g => {
+    const sel = _selectedGenreIds.has(g.id);
+    return `<button type="button" class="genre-chip-btn${sel ? ' is-selected' : ''}" data-id="${escHtml(g.id)}">${escHtml(g.name)}</button>`;
+  }).join('');
+  wrap.querySelectorAll('.genre-chip-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      if (_selectedGenreIds.has(id)) {
+        _selectedGenreIds.delete(id);
+        btn.classList.remove('is-selected');
+      } else {
+        _selectedGenreIds.add(id);
+        btn.classList.add('is-selected');
+      }
+    });
+  });
 }
 
 function _set(id, val) {
@@ -120,7 +174,6 @@ async function _handleSave() {
     url,
     user_id:      user.id,
     description:  document.getElementById('f-description')?.value.trim() || null,
-    style:        document.getElementById('f-style')?.value.trim()       || null,
     price_range:  document.getElementById('f-price')?.value              || null,
     logo_url:     document.getElementById('f-logo')?.value.trim()        || null,
     og_image_url: document.getElementById('f-og-image')?.value.trim()    || null,
@@ -142,6 +195,19 @@ async function _handleSave() {
     }
 
     if (error) throw new Error(error.message);
+
+    // Sync genres
+    const brandId = _modalMode === 'edit' ? _editingId : result?.id;
+    if (brandId) {
+      await sb.from('brand_genres').delete().eq('brand_id', brandId);
+      if (_selectedGenreIds.size > 0) {
+        const { error: ge } = await sb.from('brand_genres').insert(
+          [..._selectedGenreIds].map(genre_id => ({ brand_id: brandId, genre_id }))
+        );
+        if (ge) showToast('ジャンルの保存に失敗しました', 'error');
+      }
+    }
+
     closeModal();
     showToast(_modalMode === 'edit' ? 'ブランドを更新しました' : 'ブランドを追加しました');
     if (_onSave) _onSave(result);

@@ -34,7 +34,7 @@ async function _load() {
     const sb   = await getSupabase();
     const user = await getCurrentUser();
     const [{ data: brand, error: e1 }, { data: products }, { data: bms }] = await Promise.all([
-      sb.from('brands').select('*').eq('id', id).single(),
+      sb.from('brands').select('*, brand_genres(genres(id,name))').eq('id', id).single(),
       sb.from('products').select('*').eq('brand_id', id).order('first_seen_at', { ascending: false }),
       user ? sb.from('bookmarks').select('product_id').eq('user_id', user.id) : Promise.resolve({ data: [] }),
     ]);
@@ -64,8 +64,9 @@ function _renderDetail(brand) {
     : `<div class="brand-detail-placeholder">${initial}</div>`;
 
   document.getElementById('detail-name').textContent = brand.name;
+  const genres = (brand.brand_genres || []).map(bg => bg.genres).filter(Boolean);
   document.getElementById('detail-meta').innerHTML = [
-    brand.style       ? `<span class="badge badge-style">${escHtml(brand.style)}</span>` : '',
+    ...genres.map(g => `<span class="badge badge-genre">${escHtml(g.name)}</span>`),
     brand.price_range ? `<span class="badge badge-price">${escHtml(brand.price_range)}</span>` : '',
   ].join('');
 
@@ -336,7 +337,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('detail-edit-btn')?.addEventListener('click', () => {
     if (!_brand) return;
-    openModal('edit', _brand, updated => { _brand = updated; _renderDetail(updated); });
+    openModal('edit', _brand, async () => {
+      const sb = await getSupabase();
+      const { data } = await sb.from('brands').select('*, brand_genres(genres(id,name))').eq('id', _brand.id).single();
+      if (data) { _brand = data; _renderDetail(data); }
+    });
   });
 
   document.getElementById('detail-delete-btn')?.addEventListener('click', async () => {

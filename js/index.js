@@ -1,11 +1,17 @@
-let _brands = [];
-let _user   = null;
-let _filterTag  = '';
-let _filterQ    = '';
-let _sortKey    = 'name';
-let _viewMode   = localStorage.getItem('brandView') || 'card';
+let _brands      = [];
+let _allGenres   = [];
+let _user        = null;
+let _filterTag   = '';
+let _filterGenre = '';
+let _filterQ     = '';
+let _sortKey     = 'name';
+let _viewMode    = localStorage.getItem('brandView') || 'card';
 
 const PRICE_ORDER = { '$': 1, '$$': 2, '$$$': 3, '$$$$': 4 };
+
+function _getBrandGenres(brand) {
+  return (brand.brand_genres || []).map(bg => bg.genres).filter(Boolean);
+}
 
 async function loadBrands() {
   const sb    = await getSupabase();
@@ -17,7 +23,10 @@ async function loadBrands() {
     '<div class="skeleton" style="height:220px;border-radius:10px"></div>'
   ).join('');
 
-  const { data, error } = await sb.from('brands').select('*').order('name');
+  const [{ data, error }, { data: genres }] = await Promise.all([
+    sb.from('brands').select('*, brand_genres(genres(id,name))').order('name'),
+    sb.from('genres').select('id, name, sort_order').eq('user_id', _user.id).order('sort_order').order('name'),
+  ]);
 
   if (error) {
     grid.innerHTML = '';
@@ -25,22 +34,36 @@ async function loadBrands() {
     return;
   }
 
-  _brands = data || [];
+  _brands    = data || [];
+  _allGenres = genres || [];
   title.textContent = `ブランド一覧${_brands.length ? `（${_brands.length}件）` : ''}`;
-  _buildFilterChips();
+  _buildGenreFilter();
+  _buildTagChips();
   _render();
   empty.hidden = _brands.length > 0;
 }
 
-function _parseTags(str) {
-  if (!str) return [];
-  return str.split(',').map(t => t.trim()).filter(Boolean);
+function _buildGenreFilter() {
+  const row = document.getElementById('genre-filter-row');
+  if (!row) return;
+  if (!_allGenres.length) { row.hidden = true; return; }
+  row.hidden = false;
+  row.innerHTML = [{ id: '', name: 'すべて' }, ..._allGenres].map(g =>
+    `<button class="filter-chip${_filterGenre === g.id ? ' is-active' : ''}" data-id="${escHtml(g.id)}">${escHtml(g.name)}</button>`
+  ).join('');
+  row.querySelectorAll('.filter-chip').forEach(btn =>
+    btn.addEventListener('click', () => {
+      _filterGenre = btn.dataset.id === _filterGenre ? '' : btn.dataset.id;
+      _buildGenreFilter();
+      _render();
+    })
+  );
 }
 
-function _buildFilterChips() {
+function _buildTagChips() {
   const row = document.getElementById('filter-row');
   if (!row) return;
-  const allTags = [...new Set(_brands.flatMap(b => _parseTags(b.tags)))].sort();
+  const allTags = [...new Set(_brands.flatMap(b => parseTags(b.tags)))].sort();
   if (!allTags.length) { row.innerHTML = ''; return; }
   row.innerHTML = allTags.map(t =>
     `<button class="filter-chip${_filterTag === t ? ' is-active' : ''}" data-tag="${escHtml(t)}">${escHtml(t)}</button>`
@@ -48,7 +71,7 @@ function _buildFilterChips() {
   row.querySelectorAll('.filter-chip').forEach(btn =>
     btn.addEventListener('click', () => {
       _filterTag = _filterTag === btn.dataset.tag ? '' : btn.dataset.tag;
-      _buildFilterChips();
+      _buildTagChips();
       _render();
     })
   );
@@ -60,12 +83,15 @@ function _getFiltered() {
     const q = _filterQ.toLowerCase();
     list = list.filter(b =>
       b.name.toLowerCase().includes(q) ||
-      (b.style || '').toLowerCase().includes(q) ||
-      (_parseTags(b.tags).some(t => t.toLowerCase().includes(q)))
+      _getBrandGenres(b).some(g => g.name.toLowerCase().includes(q)) ||
+      parseTags(b.tags).some(t => t.toLowerCase().includes(q))
     );
   }
+  if (_filterGenre) {
+    list = list.filter(b => _getBrandGenres(b).some(g => g.id === _filterGenre));
+  }
   if (_filterTag) {
-    list = list.filter(b => _parseTags(b.tags).includes(_filterTag));
+    list = list.filter(b => parseTags(b.tags).includes(_filterTag));
   }
   list.sort((a, b) => {
     if (_sortKey === 'newest')     return new Date(b.created_at) - new Date(a.created_at);
@@ -115,7 +141,8 @@ function _buildRow(brand) {
 
   const imgUrl  = brand.logo_url || brand.og_image_url;
   const initial = escHtml(brand.name.charAt(0).toUpperCase());
-  const tags    = _parseTags(brand.tags).slice(0, 3);
+  const genres  = _getBrandGenres(brand).slice(0, 3);
+  const tags    = parseTags(brand.tags).slice(0, 2);
 
   row.innerHTML = `
     <div class="brand-row__logo">
@@ -125,7 +152,7 @@ function _buildRow(brand) {
     </div>
     <span class="brand-row__name">${escHtml(brand.name)}</span>
     <div class="brand-row__meta">
-      ${brand.style       ? `<span class="badge badge-style">${escHtml(brand.style)}</span>` : ''}
+      ${genres.map(g => `<span class="badge badge-genre">${escHtml(g.name)}</span>`).join('')}
       ${brand.price_range ? `<span class="badge badge-price">${escHtml(brand.price_range)}</span>` : ''}
       ${tags.map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('')}
     </div>
@@ -159,7 +186,8 @@ function _buildCard(brand) {
 
   const imgUrl  = brand.og_image_url || brand.logo_url;
   const initial = escHtml(brand.name.charAt(0).toUpperCase());
-  const tags    = _parseTags(brand.tags);
+  const genres  = _getBrandGenres(brand);
+  const tags    = parseTags(brand.tags);
 
   article.innerHTML = `
     <div class="brand-card__image js-nav">
@@ -171,13 +199,13 @@ function _buildCard(brand) {
     <div class="brand-card__body js-nav">
       <h2 class="brand-card__name">${escHtml(brand.name)}</h2>
       <div class="brand-card__meta">
-        ${brand.style       ? `<span class="badge badge-style">${escHtml(brand.style)}</span>` : ''}
+        ${genres.map(g => `<span class="badge badge-genre">${escHtml(g.name)}</span>`).join('')}
         ${brand.price_range ? `<span class="badge badge-price">${escHtml(brand.price_range)}</span>` : ''}
       </div>
       ${tags.length ? `<div class="tags-row" style="margin-top:6px">${tags.map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}
     </div>
     <div class="brand-card__actions">
-      <button class="btn btn-ghost btn-sm js-edit"   data-id="${brand.id}">編集</button>
+      <button class="btn btn-ghost btn-sm js-edit"      data-id="${brand.id}">編集</button>
       <button class="btn btn-danger-ghost btn-sm js-del" data-id="${brand.id}">削除</button>
     </div>
   `;
@@ -190,11 +218,11 @@ function _buildCard(brand) {
   article.querySelectorAll('.js-nav').forEach(el =>
     el.addEventListener('click', () => { window.location.href = `/brand?id=${brand.id}`; })
   );
-  article.querySelector('.js-edit').addEventListener('click', (e) => {
+  article.querySelector('.js-edit').addEventListener('click', e => {
     e.stopPropagation();
     openModal('edit', _brands.find(x => x.id === brand.id), () => loadBrands());
   });
-  article.querySelector('.js-del').addEventListener('click', (e) => {
+  article.querySelector('.js-del').addEventListener('click', e => {
     e.stopPropagation();
     _confirmDelete(brand.id, brand.name);
   });

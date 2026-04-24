@@ -14,8 +14,9 @@
     <div class="site-header__inner">
       <a href="/" class="site-title">Brand <span>Manager</span></a>
       <nav class="site-nav">
-        <a href="/products" class="site-nav__link">商品一覧</a>
+        <a href="/products"  class="site-nav__link">商品一覧</a>
         <a href="/bookmarks" class="site-nav__link">ブックマーク</a>
+        <a href="/settings"  class="site-nav__link">設定</a>
       </nav>
       <div class="header-right">
         <span class="user-name" id="user-name"></span>
@@ -42,6 +43,7 @@
         <option value="price_desc">価格帯：高→低</option>
       </select>
     </div>
+    <div class="genre-filter-row" id="genre-filter-row" hidden></div>
     <div class="filter-row" id="filter-row"></div>
 
     <div id="brands-grid" class="brands-grid"></div>
@@ -78,21 +80,22 @@
             <label class="form-label" for="f-description">説明 <span class="opt">（任意）</span></label>
             <textarea class="form-textarea" id="f-description" rows="3" placeholder="ブランドの説明を入力..."></textarea>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="f-style">系統</label>
-              <input class="form-input" type="text" id="f-style" placeholder="例：ミニマリスト">
+          <div class="form-group">
+            <label class="form-label">ジャンル <span class="opt">（任意）</span></label>
+            <div class="genre-chips-wrap" id="genre-chips">
+              <span style="font-size:12px;color:var(--text-light)">読み込み中...</span>
             </div>
-            <div class="form-group">
-              <label class="form-label" for="f-price">価格帯</label>
-              <select class="form-select" id="f-price">
-                <option value="">—</option>
-                <option value="$">$ 低価格</option>
-                <option value="$$">$$ ミドル</option>
-                <option value="$$$">$$$ プレミアム</option>
-                <option value="$$$$">$$$$ ラグジュアリー</option>
-              </select>
-            </div>
+            <a href="/settings" target="_blank" class="settings-link">ジャンルを管理 →</a>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-price">価格帯 <span class="opt">（任意）</span></label>
+            <select class="form-select" id="f-price">
+              <option value="">—</option>
+              <option value="$">$ 低価格</option>
+              <option value="$$">$$ ミドル</option>
+              <option value="$$$">$$$ プレミアム</option>
+              <option value="$$$$">$$$$ ラグジュアリー</option>
+            </select>
           </div>
           <div class="form-group">
             <label class="form-label" for="f-logo">ロゴ / 画像URL <span class="opt">（自動入力）</span></label>
