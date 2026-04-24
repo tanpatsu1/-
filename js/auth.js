@@ -26,12 +26,17 @@ async function requireAuth() {
   return user;
 }
 
-async function signInWithGoogle() {
-  const client = await _initClient();
-  await client.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin + '/' },
-  });
+async function sendMagicLink(email) {
+  try {
+    const client = await _initClient();
+    const { error } = await client.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + '/' },
+    });
+    return !error;
+  } catch {
+    return false;
+  }
 }
 
 async function signOut() {
