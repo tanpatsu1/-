@@ -351,6 +351,15 @@ function SettingsPage() {
           <span className="settings-row__value">Free</span>
         </div>
       </div>
+      <div className="settings-section" style={{ marginTop: 24 }}>
+        <h2 className="settings-section-title">データ</h2>
+        <p className="settings-section-desc">ブランド・アイテム・ジャンルをすべて初期状態に戻します。この操作は取り消せません。</p>
+        <button className="btn btn-danger-ghost btn-sm" onClick={() => {
+          if (!confirm('すべてのデータを削除してリセットしますか？')) return;
+          localStorage.removeItem('mise_v1');
+          location.reload();
+        }}>データをリセット</button>
+      </div>
     </div>
   );
 }

@@ -194,7 +194,7 @@ function BrandDetail({ brandId }) {
               <div className="notes-box__text">{brand.note}</div>
             </div>
           )}
-          <a href={brand.url} className="brand-official-link" target="_blank" rel="noopener" onClick={e => e.preventDefault()}>公式サイト ↗</a>
+          {brand.url && <a href={brand.url} className="brand-official-link" target="_blank" rel="noopener">公式サイト ↗</a>}
           <div className="brand-detail-actions">
             <Button variant="secondary" onClick={() => dispatch({ type: 'openBrandModal', brand })}>編集</Button>
             <button className="btn btn-danger-ghost" onClick={() => {

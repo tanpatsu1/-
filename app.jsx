@@ -10,12 +10,18 @@ const NAV_ITEMS = [
 
 const DEFAULT_TWEAKS = { theme: 'light', density: 'standard', accent: 'ink' };
 
+const LS_KEY = 'mise_v1';
+function loadStorage() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; }
+}
+const _ls = loadStorage();
+
 const INITIAL = {
   view: 'brands',
   activeBrandId: null,
-  brands: window.SEED_BRANDS || [],
-  products: window.SEED_PRODUCTS || [],
-  genres: window.SEED_GENRES || [],
+  brands:   _ls.brands   || window.SEED_BRANDS   || [],
+  products: _ls.products || window.SEED_PRODUCTS || [],
+  genres:   _ls.genres   || window.SEED_GENRES   || [],
   brandFilters: { search: '', genre: 'all', tag: 'all', sort: 'name', mode: 'grid' },
   modal: null,
 };
@@ -272,6 +278,14 @@ function App() {
     document.documentElement.dataset.density = tweaks.density;
     document.documentElement.dataset.accent  = tweaks.accent;
   }, [tweaks]);
+
+  useEffect(() => {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      brands: state.brands,
+      products: state.products,
+      genres: state.genres,
+    }));
+  }, [state.brands, state.products, state.genres]);
 
   const renderPage = () => {
     switch (state.view) {

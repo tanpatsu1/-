@@ -621,4 +621,9 @@ html[data-theme="dark"] .form-select {
   .search-sort-row { flex-direction: column; gap: 8px; }
   .search-input,
   .sort-select { width: 100%; }
+
+  /* Timeline: filter strip goes full-width below the title */
+  .section-header__right { width: 100%; }
+  .tl-filter { display: flex; width: 100%; }
+  .tl-filter__btn { flex: 1; }
 }
