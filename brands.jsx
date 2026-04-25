@@ -173,7 +173,7 @@ function BrandDetail({ brandId }) {
   });
   return (
     <div>
-      <a className="back-link" onClick={() => dispatch({ type: 'navigate', view: 'brands' })}>← Back to Brands</a>
+      <a className="back-link" onClick={() => dispatch({ type: 'navigate', view: 'brands' })}>← ブランド一覧</a>
       <div className="brand-detail-header">
         <div className="brand-detail-image">
           <Swatch swatch={brand.swatch} initial={brand.initial} size="xl" />
@@ -208,9 +208,8 @@ function BrandDetail({ brandId }) {
       </div>
       <div className="products-section">
         <div className="products-section-header">
-          <h2>Items <span className="muted">({brandProducts.length})</span></h2>
-          <span className="last-sync-text">2時間前に同期</span>
-          <button className="btn btn-secondary btn-sm" style={{ marginLeft: 'auto' }} onClick={() => dispatch({ type: 'openProductModal', brandId: brand.id, product: null })}>＋ Add item</button>
+          <h2>アイテム <span className="muted">({brandProducts.length})</span></h2>
+          <button className="btn btn-secondary btn-sm" style={{ marginLeft: 'auto' }} onClick={() => dispatch({ type: 'openProductModal', brandId: brand.id, product: null })}>＋ アイテムを追加</button>
         </div>
         <div className="product-filter-row">
           <input className="product-search-input" type="search" placeholder="Search items · tags…" value={productSearch} onChange={e => setProductSearch(e.target.value)} />
@@ -220,7 +219,7 @@ function BrandDetail({ brandId }) {
           ))}
         </div>
         {filtered.length === 0 ? (
-          <EmptyState compact icon="◯" title="No items yet" text="Tap '+ Add item' to register one." />
+          <EmptyState compact icon="◯" title="アイテムがありません" text="「＋ アイテムを追加」から登録できます。" />
         ) : (
           <div className="products-grid">{filtered.map(p => <ProductCard key={p.id} product={p} />)}</div>
         )}

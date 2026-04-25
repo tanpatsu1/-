@@ -82,7 +82,7 @@ function ProductsPage() {
           <p className="section-sub">
             <span>{sorted.length} of {state.products.length}</span>
             <span className="sub-sep">·</span>
-            <span>across {state.brands.length} brands</span>
+            <span>{state.brands.length} ブランド</span>
           </p>
         </div>
       </div>
@@ -163,11 +163,11 @@ function TimelinePage() {
         <div>
           <h1 className="section-title"><em>Timeline</em><span className="dot">.</span></h1>
           <p className="section-sub">
-            <span>{stats.purchased} purchased</span>
+            <span>{stats.purchased} 購入済み</span>
             <span className="sub-sep">·</span>
-            <span>{stats.total} tracked</span>
+            <span>{stats.total} 件記録</span>
             <span className="sub-sep">·</span>
-            <span>{fmtYen(stats.spend)} spent</span>
+            <span>{fmtYen(stats.spend)} 購入</span>
           </p>
         </div>
         <div className="section-header__right">
@@ -175,7 +175,7 @@ function TimelinePage() {
             {filters.map(([v, label, total]) => (
               <button key={v} className={cx('tl-filter__btn', filter === v && 'is-active')} onClick={() => setFilter(v)}>
                 <span>{label}</span>
-                <span className="tl-filter__total">{fmtYen(total)}</span>
+                <span className="tl-filter__total">{total > 0 ? fmtYen(total) : '—'}</span>
               </button>
             ))}
           </div>
@@ -188,15 +188,11 @@ function TimelinePage() {
           {yearKeys.map(year => {
             const monthKeys = Object.keys(years[year]).sort((a, b) => b.localeCompare(a));
             const yearCount = monthKeys.reduce((s, k) => s + years[year][k].length, 0);
-            const yearSpend = monthKeys.reduce((sum, mk) =>
-              sum + years[year][mk].filter(p => p.status === 'purchased').reduce((s, p) => s + (p.price || 0), 0)
-            , 0);
             return (
               <section key={year} className="tl-year">
                 <aside className="tl-year__label">
                   <div className="tl-year__digits">{year}</div>
-                  <div className="tl-year__meta">{yearCount} {yearCount === 1 ? 'item' : 'items'}</div>
-                  {yearSpend > 0 && <div className="tl-year__spend">{fmtYen(yearSpend)}</div>}
+                  <div className="tl-year__meta">{yearCount}件</div>
                 </aside>
                 <div className="tl-year__body">
                   {monthKeys.map(mk => (
@@ -220,7 +216,7 @@ function TimelinePage() {
                                   <span className="tl-item__brand">{b?.name || '—'}</span>
                                   {p.tags?.[0] && <><span className="tl-item__sep">·</span><span>{p.tags[0]}</span></>}
                                   <span className="tl-item__sep">·</span>
-                                  <span className="tl-item__status">{p.status}</span>
+                                  <span className="tl-item__status">{{ wishlist: 'ほしい', considering: '検討中', purchased: '購入済み' }[p.status]}</span>
                                 </div>
                               </div>
                               <div className="tl-item__price">{fmtYen(p.price)}</div>
