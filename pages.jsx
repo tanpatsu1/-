@@ -82,7 +82,7 @@ function ProductsPage() {
           <p className="section-sub">
             <span>{sorted.length} of {state.products.length}</span>
             <span className="sub-sep">·</span>
-            <span>{state.brands.length} ブランド</span>
+            <span>across {state.brands.length} brands</span>
           </p>
         </div>
       </div>
@@ -163,11 +163,11 @@ function TimelinePage() {
         <div>
           <h1 className="section-title"><em>Timeline</em><span className="dot">.</span></h1>
           <p className="section-sub">
-            <span>{stats.purchased} 購入済み</span>
+            <span>{stats.purchased} purchased</span>
             <span className="sub-sep">·</span>
-            <span>{stats.total} 件記録</span>
+            <span>{stats.total} tracked</span>
             <span className="sub-sep">·</span>
-            <span>{fmtYen(stats.spend)} 購入</span>
+            <span>{fmtYen(stats.spend)} spent</span>
           </p>
         </div>
         <div className="section-header__right">
@@ -192,7 +192,7 @@ function TimelinePage() {
               <section key={year} className="tl-year">
                 <aside className="tl-year__label">
                   <div className="tl-year__digits">{year}</div>
-                  <div className="tl-year__meta">{yearCount}件</div>
+                  <div className="tl-year__meta">{yearCount} {yearCount === 1 ? 'item' : 'items'}</div>
                 </aside>
                 <div className="tl-year__body">
                   {monthKeys.map(mk => (
@@ -216,7 +216,7 @@ function TimelinePage() {
                                   <span className="tl-item__brand">{b?.name || '—'}</span>
                                   {p.tags?.[0] && <><span className="tl-item__sep">·</span><span>{p.tags[0]}</span></>}
                                   <span className="tl-item__sep">·</span>
-                                  <span className="tl-item__status">{{ wishlist: 'ほしい', considering: '検討中', purchased: '購入済み' }[p.status]}</span>
+                                  <span className="tl-item__status">{p.status}</span>
                                 </div>
                               </div>
                               <div className="tl-item__price">{fmtYen(p.price)}</div>
