@@ -8,6 +8,9 @@ const priceSymbol = (p) => '¥'.repeat(p);
 const AppCtx = createContext(null);
 const useApp = () => useContext(AppCtx);
 
+const UserCtx = createContext(null);
+const useUser = () => useContext(UserCtx);
+
 function Swatch({ swatch, initial, size = 'md', style }) {
   const { bg, fg, style: kind } = swatch || { bg: '#e8e8e8', fg: '#b0b0b0', style: 'paper' };
   const fontSize = size === 'xl' ? 96 : size === 'lg' ? 56 : size === 'sm' ? 18 : 38;
@@ -144,4 +147,4 @@ function SwatchPicker({ swatch, onChange }) {
   );
 }
 
-Object.assign(window, { cx, fmtYen, priceSymbol, Swatch, SwatchPicker, Badge, StatusBadge, Tag, Button, Modal, ToastProvider, useToast, AppCtx, useApp });
+Object.assign(window, { cx, fmtYen, priceSymbol, Swatch, SwatchPicker, Badge, StatusBadge, Tag, Button, Modal, ToastProvider, useToast, AppCtx, useApp, UserCtx, useUser });

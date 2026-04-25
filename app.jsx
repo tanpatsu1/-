@@ -1,4 +1,4 @@
-const { useReducer, useEffect, useState } = React;
+const { useReducer, useEffect, useState, useRef } = React;
 
 const NAV_ITEMS = [
   { view: 'brands',    label: 'Brands' },
@@ -14,14 +14,13 @@ const LS_KEY = 'mise_v1';
 function loadStorage() {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; }
 }
-const _ls = loadStorage();
 
 const INITIAL = {
   view: 'brands',
   activeBrandId: null,
-  brands:   _ls.brands   || window.SEED_BRANDS   || [],
-  products: _ls.products || window.SEED_PRODUCTS || [],
-  genres:   _ls.genres   || window.SEED_GENRES   || [],
+  brands:   window.SEED_BRANDS   || [],
+  products: window.SEED_PRODUCTS || [],
+  genres:   window.SEED_GENRES   || [],
   brandFilters: { search: '', genre: 'all', tag: 'all', sort: 'name', mode: 'grid' },
   modal: null,
 };
@@ -92,6 +91,13 @@ function appReducer(state, action) {
       };
     case 'importData':
       return { ...state, brands: action.data.brands, products: action.data.products, genres: action.data.genres || state.genres };
+    case 'loadData':
+      return {
+        ...state,
+        brands:   action.data.brands   || state.brands,
+        products: action.data.products || state.products,
+        genres:   action.data.genres   || state.genres,
+      };
     default:
       return state;
   }
@@ -135,11 +141,29 @@ function BrandModal({ modal, dispatch }) {
   const [description, setDescription] = useState(brand?.description || '');
   const [selGenres, setSelGenres] = useState(brand?.genres || []);
   const [price, setPrice] = useState(brand?.price || 2);
+  const [priceNote, setPriceNote] = useState(brand?.priceNote || '');
   const [tags, setTags] = useState(brand?.tags?.join(', ') || '');
   const [note, setNote] = useState(brand?.note || '');
   const [swatch, setSwatch] = useState(brand?.swatch || { bg: '#E8E6E1', fg: '#8A8882', style: 'paper' });
+  const [fetching, setFetching] = useState(false);
   const toast = useToast();
   const toggleGenre = (id) => setSelGenres(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]);
+  const fetchMeta = async () => {
+    if (!url.trim()) return;
+    setFetching(true);
+    try {
+      const res = await fetch('/api/fetch-meta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim() }),
+      });
+      const meta = await res.json();
+      if (meta.title && !name.trim()) setName(meta.title);
+      if (meta.description && !description.trim()) setDescription(meta.description);
+      toast.show('情報を取得しました');
+    } catch { toast.show('取得に失敗しました', { error: true }); }
+    finally { setFetching(false); }
+  };
   const save = () => {
     if (!name.trim()) { toast.show('ブランド名を入力してください', { error: true }); return; }
     dispatch({
@@ -148,7 +172,7 @@ function BrandModal({ modal, dispatch }) {
         id: brand?.id || 'b' + Math.random().toString(36).slice(2),
         name: name.trim(), initial: name.trim().charAt(0).toUpperCase(),
         url: url.trim(), description: description.trim(),
-        genres: selGenres, price,
+        genres: selGenres, price, priceNote: priceNote.trim(),
         tags: tags.split(',').map(t => t.trim()).filter(Boolean),
         note: note.trim(),
         swatch,
@@ -169,7 +193,11 @@ function BrandModal({ modal, dispatch }) {
         </div>
       </div>
       <div className="form-group"><label className="form-label">公式サイト URL</label>
-        <input className="form-input" type="url" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." /></div>
+        <div className="url-input-row">
+          <input className="form-input" type="url" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." />
+          <button type="button" className="btn btn-secondary btn-sm" onClick={fetchMeta} disabled={!url.trim() || fetching}>{fetching ? '…' : '取得'}</button>
+        </div>
+      </div>
       <div className="form-group"><label className="form-label">説明</label>
         <textarea className="form-textarea" value={description} onChange={e => setDescription(e.target.value)} rows={3} /></div>
       <div className="form-group"><label className="form-label">ジャンル</label>
@@ -180,6 +208,8 @@ function BrandModal({ modal, dispatch }) {
         <div className="price-seg">{[1,2,3,4].map(n => (
           <button key={n} type="button" className={cx('price-seg__btn', price === n && 'is-active')} onClick={() => setPrice(n)}>{'¥'.repeat(n)}</button>
         ))}</div></div>
+      <div className="form-group"><label className="form-label">価格目安</label>
+        <input className="form-input" type="text" value={priceNote} onChange={e => setPriceNote(e.target.value)} placeholder="例: ¥15,000〜¥80,000" /></div>
       <div className="form-group"><label className="form-label">タグ（カンマ区切り）</label>
         <TagInput value={tags} onChange={setTags} allTags={[...new Set(state.brands.flatMap(b => b.tags))]} /></div>
       <div className="form-group"><label className="form-label">メモ</label>
@@ -285,9 +315,11 @@ function Header({ view, dispatch }) {
   );
 }
 
-function App() {
+function App({ user, supabase }) {
   const [state, dispatch] = useReducer(appReducer, INITIAL);
   const [tweaks, setTweak] = useTweaks(DEFAULT_TWEAKS);
+  const [loaded, setLoaded] = useState(false);
+  const saveRef = useRef(null);
 
   useEffect(() => {
     document.documentElement.dataset.theme   = tweaks.theme;
@@ -295,13 +327,36 @@ function App() {
     document.documentElement.dataset.accent  = tweaks.accent;
   }, [tweaks]);
 
+  // Load user data from Supabase on mount (migrate localStorage if first time)
   useEffect(() => {
-    localStorage.setItem(LS_KEY, JSON.stringify({
-      brands: state.brands,
-      products: state.products,
-      genres: state.genres,
-    }));
-  }, [state.brands, state.products, state.genres]);
+    supabase.from('user_data').select('data').eq('user_id', user.id).single()
+      .then(({ data }) => {
+        if (data?.data?.brands?.length || data?.data?.products?.length) {
+          dispatch({ type: 'loadData', data: data.data });
+        } else {
+          const ls = loadStorage();
+          if (ls.brands?.length) dispatch({ type: 'loadData', data: ls });
+        }
+      })
+      .catch(() => {
+        const ls = loadStorage();
+        if (ls.brands?.length) dispatch({ type: 'loadData', data: ls });
+      })
+      .finally(() => setLoaded(true));
+  }, []);
+
+  // Debounced save to Supabase on data changes
+  useEffect(() => {
+    if (!loaded) return;
+    clearTimeout(saveRef.current);
+    saveRef.current = setTimeout(() => {
+      supabase.from('user_data').upsert({
+        user_id: user.id,
+        data: { brands: state.brands, products: state.products, genres: state.genres },
+        updated_at: new Date().toISOString(),
+      });
+    }, 1000);
+  }, [state.brands, state.products, state.genres, loaded]);
 
   const renderPage = () => {
     switch (state.view) {
@@ -315,31 +370,39 @@ function App() {
   };
 
   return (
-    <AppCtx.Provider value={{ state, dispatch }}>
-      <ToastProvider>
-        <Header view={state.view} dispatch={dispatch} />
-        <div className="main-container">
-          {renderPage()}
-        </div>
-        {state.modal?.kind === 'brand'   && <BrandModal   modal={state.modal} dispatch={dispatch} />}
-        {state.modal?.kind === 'product' && <ProductModal modal={state.modal} dispatch={dispatch} />}
-        <TweaksPanel title="MISE Tweaks">
-          <TweakSection label="Appearance">
-            <TweakRadio label="Theme"   value={tweaks.theme}
-              options={[{value:'light',label:'Light'},{value:'dark',label:'Dark'}]}
-              onChange={v => setTweak('theme', v)} />
-            <TweakRadio label="Density" value={tweaks.density}
-              options={[{value:'compact',label:'Compact'},{value:'standard',label:'Std'},{value:'relaxed',label:'Relaxed'}]}
-              onChange={v => setTweak('density', v)} />
-            <TweakRadio label="Accent"  value={tweaks.accent}
-              options={[{value:'ink',label:'Ink'},{value:'warm',label:'Warm'},{value:'cool',label:'Cool'}]}
-              onChange={v => setTweak('accent', v)} />
-          </TweakSection>
-        </TweaksPanel>
-        <BottomNav view={state.view} dispatch={dispatch} />
-      </ToastProvider>
-    </AppCtx.Provider>
+    <UserCtx.Provider value={{ user, supabase }}>
+      <AppCtx.Provider value={{ state, dispatch }}>
+        <ToastProvider>
+          <Header view={state.view} dispatch={dispatch} />
+          <div className="main-container">
+            {loaded ? renderPage() : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40vh', color: 'var(--text-muted)', fontSize: '13px', letterSpacing: '0.06em' }}>
+                …
+              </div>
+            )}
+          </div>
+          {state.modal?.kind === 'brand'   && <BrandModal   modal={state.modal} dispatch={dispatch} />}
+          {state.modal?.kind === 'product' && <ProductModal modal={state.modal} dispatch={dispatch} />}
+          <TweaksPanel title="MISE Tweaks">
+            <TweakSection label="Appearance">
+              <TweakRadio label="Theme"   value={tweaks.theme}
+                options={[{value:'light',label:'Light'},{value:'dark',label:'Dark'}]}
+                onChange={v => setTweak('theme', v)} />
+              <TweakRadio label="Density" value={tweaks.density}
+                options={[{value:'compact',label:'Compact'},{value:'standard',label:'Std'},{value:'relaxed',label:'Relaxed'}]}
+                onChange={v => setTweak('density', v)} />
+              <TweakRadio label="Accent"  value={tweaks.accent}
+                options={[{value:'ink',label:'Ink'},{value:'warm',label:'Warm'},{value:'cool',label:'Cool'}]}
+                onChange={v => setTweak('accent', v)} />
+            </TweakSection>
+          </TweaksPanel>
+          <BottomNav view={state.view} dispatch={dispatch} />
+        </ToastProvider>
+      </AppCtx.Provider>
+    </UserCtx.Provider>
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <AuthGate>{(user, sb) => <App user={user} supabase={sb} />}</AuthGate>
+);

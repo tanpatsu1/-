@@ -95,7 +95,7 @@ function ProductsPage() {
         </div>
       </div>
       <div className="search-sort-row">
-        <input ref={searchRef} className="search-input" type="search" placeholder="Search items · brands… ⌘K" value={search} onChange={e => setSearch(e.target.value)} />
+        <input ref={searchRef} className="search-input" type="search" placeholder="Search items · brands…" value={search} onChange={e => setSearch(e.target.value)} />
         <select className="sort-select" value={brandId} onChange={e => setBrandId(e.target.value)}>
           <option value="all">すべてのブランド</option>
           {state.brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -290,6 +290,7 @@ function BookmarksPage() {
 
 function SettingsPage() {
   const { state, dispatch } = useApp();
+  const { user } = useUser();
   const toast = useToast();
   const [newGenre, setNewGenre] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -349,14 +350,12 @@ function SettingsPage() {
       </div>
       <div className="settings-section" style={{ marginTop: 24 }}>
         <h2 className="settings-section-title">アカウント</h2>
-        <p className="settings-section-desc">ログイン中のアカウント情報。</p>
         <div className="settings-row">
           <span className="settings-row__label">メール</span>
-          <span className="settings-row__value">user@example.com</span>
+          <span className="settings-row__value">{user?.email}</span>
         </div>
-        <div className="settings-row">
-          <span className="settings-row__label">プラン</span>
-          <span className="settings-row__value">Free</span>
+        <div className="settings-row" style={{ marginTop: 12 }}>
+          <button className="btn btn-ghost btn-sm" onClick={() => signOut()}>ログアウト</button>
         </div>
       </div>
       <div className="settings-section" style={{ marginTop: 24 }}>

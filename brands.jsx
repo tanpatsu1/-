@@ -54,7 +54,7 @@ function BrandsPage() {
         </div>
       </div>
       <div className="search-sort-row">
-        <input ref={searchRef} className="search-input" type="search" placeholder="ブランド名・タグで検索… ⌘K" value={search} onChange={e => setFilter({ search: e.target.value })} />
+        <input ref={searchRef} className="search-input" type="search" placeholder="ブランド名・タグで検索…" value={search} onChange={e => setFilter({ search: e.target.value })} />
         <select className="sort-select" value={sort} onChange={e => setFilter({ sort: e.target.value })}>
           <option value="name">名前順</option>
           <option value="recent">登録が新しい順</option>
@@ -97,17 +97,7 @@ function BrandsPage() {
 }
 
 function BrandCard({ brand, products }) {
-  const { state, dispatch } = useApp();
-  const toast = useToast();
-  const genreNames = brand.genres.map(id => state.genres.find(g => g.id === id)?.name).filter(Boolean);
-  const onDelete = (e) => {
-    e.stopPropagation();
-    const snapshot = { brand, products };
-    dispatch({ type: 'deleteBrand', id: brand.id });
-    toast.show(`${brand.name} を削除しました`, {
-      action: { label: '元に戻す', onClick: () => dispatch({ type: 'restoreBrand', snapshot }) },
-    });
-  };
+  const { dispatch } = useApp();
   return (
     <article className="brand-card" onClick={() => dispatch({ type: 'openBrand', id: brand.id })}>
       <div className="brand-card__image">
@@ -115,48 +105,21 @@ function BrandCard({ brand, products }) {
       </div>
       <div className="brand-card__body">
         <h2 className="brand-card__name">{brand.name}</h2>
-        <div className="brand-card__meta">
-          {genreNames.map(g => <Badge key={g} kind="genre">{g}</Badge>)}
-          <Badge kind="price">{priceSymbol(brand.price)}</Badge>
-        </div>
-        {brand.tags.length > 0 && (
-          <div className="tags-row">{brand.tags.map(t => <Tag key={t}>{t}</Tag>)}</div>
-        )}
-        <p className="brand-card__count">{products.length} Items</p>
-      </div>
-      <div className="brand-card__actions">
-        <button className="btn btn-ghost btn-sm" onClick={e => { e.stopPropagation(); dispatch({ type: 'openBrandModal', brand }); }}>編集</button>
-        <button className="btn btn-danger-ghost btn-sm" onClick={onDelete}>削除</button>
+        <p className="brand-card__meta-line">{priceSymbol(brand.price)}&ensp;·&ensp;{products.length} items</p>
       </div>
     </article>
   );
 }
 
 function BrandRow({ brand, products }) {
-  const { state, dispatch } = useApp();
-  const toast = useToast();
-  const genreNames = brand.genres.map(id => state.genres.find(g => g.id === id)?.name).filter(Boolean);
+  const { dispatch } = useApp();
   return (
     <div className="brand-row" onClick={() => dispatch({ type: 'openBrand', id: brand.id })}>
       <div className="brand-row__logo">
         <Swatch swatch={brand.swatch} initial={brand.initial} size="sm" />
       </div>
       <span className="brand-row__name">{brand.name}</span>
-      <div className="brand-row__meta">
-        {genreNames.map(g => <Badge key={g} kind="genre">{g}</Badge>)}
-        <Badge kind="price">{priceSymbol(brand.price)}</Badge>
-        {brand.tags.slice(0, 3).map(t => <Tag key={t}>{t}</Tag>)}
-      </div>
-      <span className="brand-row__count">{products.length} Items</span>
-      <div className="brand-row__actions">
-        <button className="btn btn-ghost btn-sm" onClick={e => { e.stopPropagation(); dispatch({ type: 'openBrandModal', brand }); }}>編集</button>
-        <button className="btn btn-danger-ghost btn-sm" onClick={e => {
-          e.stopPropagation();
-          const snapshot = { brand, products };
-          dispatch({ type: 'deleteBrand', id: brand.id });
-          toast.show(`${brand.name} を削除しました`, { action: { label: '元に戻す', onClick: () => dispatch({ type: 'restoreBrand', snapshot }) } });
-        }}>削除</button>
-      </div>
+      <span className="brand-row__meta-line">{priceSymbol(brand.price)}&ensp;·&ensp;{products.length} items</span>
     </div>
   );
 }
@@ -192,6 +155,7 @@ function BrandDetail({ brandId }) {
             {genreNames.map(g => <Badge key={g} kind="genre">{g}</Badge>)}
             <Badge kind="price">{priceSymbol(brand.price)}</Badge>
           </div>
+          {brand.priceNote && <p className="brand-price-note">{brand.priceNote}</p>}
           {brand.tags.length > 0 && (
             <div className="tags-row" style={{ marginBottom: 16 }}>{brand.tags.map(t => <Tag key={t}>{t}</Tag>)}</div>
           )}
@@ -217,7 +181,6 @@ function BrandDetail({ brandId }) {
       <div className="products-section">
         <div className="products-section-header">
           <h2>Items <span className="muted">({brandProducts.length})</span></h2>
-          <span className="last-sync-text">2時間前に同期</span>
           <button className="btn btn-secondary btn-sm" style={{ marginLeft: 'auto' }} onClick={() => dispatch({ type: 'openProductModal', brandId: brand.id, product: null })}>＋ Add item</button>
         </div>
         <div className="product-filter-row">
