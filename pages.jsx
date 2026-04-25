@@ -402,6 +402,20 @@ function SettingsPage() {
           location.reload();
         }}>データをリセット</button>
       </div>
+      <div className="settings-section" style={{ marginTop: 24 }}>
+        <h2 className="settings-section-title">使い方</h2>
+        {[
+          ['ブランドを追加するには？', 'Brands ページ右上の「＋ New brand」からブランドを登録します。カラー・価格帯・タグを設定できます。'],
+          ['アイテムを登録するには？', 'ブランド詳細ページの「＋ Add item」からアイテムを追加します。ステータス（ほしい・検討中・購入済み）で管理できます。'],
+          ['タイムラインの見方', 'Timeline ではアイテムを時系列で一覧できます。フィルタで絞り込み、購入総額も確認できます。'],
+          ['データのバックアップ', 'Settings › バックアップ から JSON でエクスポート・インポートができます。'],
+        ].map(([q, a]) => (
+          <details key={q} className="help-item">
+            <summary className="help-item__q">{q}</summary>
+            <p className="help-item__a">{a}</p>
+          </details>
+        ))}
+      </div>
     </div>
   );
 }

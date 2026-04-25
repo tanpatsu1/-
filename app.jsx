@@ -276,6 +276,41 @@ function ProductModal({ modal, dispatch }) {
   );
 }
 
+const OB_STEPS = [
+  { icon: '◫', title: 'ブランドを追加する', body: 'Brands ページ右上の「＋ New brand」からブランドを登録。カラー・価格帯・タグを設定できます。' },
+  { icon: '◈', title: 'アイテムを登録する', body: 'ブランド詳細ページの「＋ Add item」からアイテムを追加。ステータス（ほしい・検討中・購入済み）で管理できます。' },
+  { icon: '◷', title: 'タイムラインで把握',  body: 'Timeline ではアイテムを時系列で一覧。フィルタで絞り込み、購入総額も確認できます。' },
+  { icon: '♡', title: '♡ でブックマーク',   body: 'アイテムに♡をつけて Saved に保存。気になるアイテムをすぐに見返せます。' },
+];
+
+function OnboardingModal({ userId, onDone }) {
+  const [step, setStep] = useState(0);
+  const { icon, title, body } = OB_STEPS[step];
+  const isLast = step === OB_STEPS.length - 1;
+  const close = () => { localStorage.setItem('mise_ob_' + userId, '1'); onDone(); };
+  return (
+    <div className="modal-overlay is-open" onClick={close}>
+      <div className="modal modal-sm onboarding-modal" onClick={e => e.stopPropagation()}>
+        <button className="modal__close" onClick={close} aria-label="閉じる">×</button>
+        <div className="ob-icon">{icon}</div>
+        <div className="ob-step-label">{step + 1} / {OB_STEPS.length}</div>
+        <h2 className="ob-title">{title}</h2>
+        <p className="ob-body">{body}</p>
+        <div className="ob-dots">
+          {OB_STEPS.map((_, i) => <div key={i} className={cx('ob-dot', i === step && 'is-active')} onClick={() => setStep(i)} />)}
+        </div>
+        <div className="ob-footer">
+          {step > 0 && <button className="btn btn-ghost btn-sm" onClick={() => setStep(s => s - 1)}>← 戻る</button>}
+          <div style={{ flex: 1 }} />
+          {isLast
+            ? <button className="btn btn-primary" onClick={close}>はじめる →</button>
+            : <button className="btn btn-secondary btn-sm" onClick={() => setStep(s => s + 1)}>次へ →</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const BOTTOM_NAV = [
   { view: 'brands',    label: 'Brands' },
   { view: 'products',  label: 'Items' },
@@ -319,6 +354,7 @@ function App({ user, supabase }) {
   const [state, dispatch] = useReducer(appReducer, INITIAL);
   const [tweaks, setTweak] = useTweaks(DEFAULT_TWEAKS);
   const [loaded, setLoaded] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const saveRef = useRef(null);
 
   useEffect(() => {
@@ -344,6 +380,10 @@ function App({ user, supabase }) {
       })
       .finally(() => setLoaded(true));
   }, []);
+
+  useEffect(() => {
+    if (loaded && !localStorage.getItem('mise_ob_' + user.id)) setShowOnboarding(true);
+  }, [loaded]);
 
   // Debounced save to Supabase on data changes
   useEffect(() => {
@@ -383,6 +423,7 @@ function App({ user, supabase }) {
           </div>
           {state.modal?.kind === 'brand'   && <BrandModal   modal={state.modal} dispatch={dispatch} />}
           {state.modal?.kind === 'product' && <ProductModal modal={state.modal} dispatch={dispatch} />}
+          {showOnboarding && <OnboardingModal userId={user.id} onDone={() => setShowOnboarding(false)} />}
           <TweaksPanel title="MISE Tweaks">
             <TweakSection label="Appearance">
               <TweakRadio label="Theme"   value={tweaks.theme}
