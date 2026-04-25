@@ -57,6 +57,7 @@ function ProductsPage() {
   const [brandId, setBrandId] = useState('all');
   const [status, setStatus] = useState('all');
   const [tag, setTag] = useState('all');
+  const [sort, setSort] = useState('default');
   const allTags = Array.from(new Set(state.products.flatMap(p => p.tags)));
   const filtered = state.products.filter(p => {
     if (brandId !== 'all' && p.brandId !== brandId) return false;
@@ -69,13 +70,17 @@ function ProductsPage() {
     }
     return true;
   });
+  const sorted = sort === 'price_asc' ? [...filtered].sort((a, b) => a.price - b.price)
+    : sort === 'price_desc' ? [...filtered].sort((a, b) => b.price - a.price)
+    : sort === 'newest' ? [...filtered].sort((a, b) => (b.actedAt || '').localeCompare(a.actedAt || ''))
+    : filtered;
   return (
     <div>
       <div className="section-header">
         <div>
           <h1 className="section-title"><em>Items</em><span className="dot">.</span></h1>
           <p className="section-sub">
-            <span>{filtered.length} of {state.products.length}</span>
+            <span>{sorted.length} of {state.products.length}</span>
             <span className="sub-sep">·</span>
             <span>across {state.brands.length} brands</span>
           </p>
@@ -86,6 +91,12 @@ function ProductsPage() {
         <select className="sort-select" value={brandId} onChange={e => setBrandId(e.target.value)}>
           <option value="all">すべてのブランド</option>
           {state.brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+        </select>
+        <select className="sort-select" value={sort} onChange={e => setSort(e.target.value)}>
+          <option value="default">デフォルト順</option>
+          <option value="newest">日付: 新しい順</option>
+          <option value="price_asc">価格: 低い順</option>
+          <option value="price_desc">価格: 高い順</option>
         </select>
       </div>
       <div className="filter-row">
@@ -99,10 +110,10 @@ function ProductsPage() {
           <button key={t} className={cx('filter-chip filter-chip--ghost', tag === t && 'is-active')} onClick={() => setTag(t)}>{t}</button>
         ))}
       </div>
-      {filtered.length === 0 ? (
+      {sorted.length === 0 ? (
         <EmptyState icon="◯" title="No items match" text="Adjust your filters or search." />
       ) : (
-        <div className="products-grid">{filtered.map(p => <ProductCard key={p.id} product={p} showBrand />)}</div>
+        <div className="products-grid">{sorted.map(p => <ProductCard key={p.id} product={p} showBrand />)}</div>
       )}
     </div>
   );

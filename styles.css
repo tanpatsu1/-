@@ -466,3 +466,24 @@ html[data-theme="dark"] .form-select {
   .products-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .user-name { display: none; }
 }
+
+/* ═══ Modal form segments ═══ */
+.genre-chip-btn.is-active { background: var(--text-primary); color: var(--bg); border-color: var(--text-primary); }
+
+.price-seg { display: flex; gap: 4px; }
+.price-seg__btn {
+  flex: 1; padding: 7px 4px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 500; background: var(--surface); color: var(--text-muted);
+  transition: all var(--t); text-align: center;
+}
+.price-seg__btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.price-seg__btn.is-active { background: var(--text-primary); color: var(--bg); border-color: var(--text-primary); }
+
+.status-seg { display: flex; gap: 4px; }
+.status-seg__btn {
+  flex: 1; padding: 7px 4px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 400; background: var(--surface); color: var(--text-muted);
+  transition: all var(--t); text-align: center; white-space: nowrap;
+}
+.status-seg__btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.status-seg__btn.is-active { background: var(--text-primary); color: var(--bg); border-color: var(--text-primary); }

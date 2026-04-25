@@ -13,6 +13,8 @@ function BrandsPage() {
     if (tag !== 'all') list = list.filter(b => b.tags.includes(tag));
     if (sort === 'name') list.sort((a, b) => a.name.localeCompare(b.name));
     else if (sort === 'recent') list.sort((a, b) => b.addedAt.localeCompare(a.addedAt));
+    else if (sort === 'price_asc') list.sort((a, b) => a.price - b.price);
+    else if (sort === 'price_desc') list.sort((a, b) => b.price - a.price);
     return list;
   }, [brands, search, genre, tag, sort]);
 
@@ -48,6 +50,8 @@ function BrandsPage() {
         <select className="sort-select" value={sort} onChange={e => setFilter({ sort: e.target.value })}>
           <option value="name">名前順</option>
           <option value="recent">登録が新しい順</option>
+          <option value="price_asc">価格帯：低い順</option>
+          <option value="price_desc">価格帯：高い順</option>
         </select>
       </div>
       <div className="genre-filter-row">

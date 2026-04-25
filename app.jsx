@@ -128,7 +128,7 @@ function BrandModal({ modal, dispatch }) {
       <div className="form-group"><label className="form-label">説明</label>
         <textarea className="form-textarea" value={description} onChange={e => setDescription(e.target.value)} rows={3} /></div>
       <div className="form-group"><label className="form-label">ジャンル</label>
-        <div className="genre-chips">{state.genres.map(g => (
+        <div className="genre-chips-wrap">{state.genres.map(g => (
           <button key={g.id} type="button" className={cx('genre-chip-btn', selGenres.includes(g.id) && 'is-active')} onClick={() => toggleGenre(g.id)}>{g.name}</button>
         ))}</div></div>
       <div className="form-group"><label className="form-label">価格帯</label>
@@ -196,16 +196,12 @@ function ProductModal({ modal, dispatch }) {
 
 function Header({ view, dispatch }) {
   return (
-    <header className="app-header">
-      <div className="header-inner">
-        <div className="header-brand" onClick={() => dispatch({ type: 'navigate', view: 'brands' })} style={{ cursor: 'pointer' }}>
-          <span className="header-logo">服</span>
-          <span className="header-wordmark">Brand Manager</span>
-        </div>
-        <nav className="header-nav">
+    <header className="site-header">
+      <div className="site-header__inner">
+        <nav className="site-nav">
           {NAV_ITEMS.map(({ view: v, label }) => (
-            <button key={v} className={cx('nav-btn', (view === v || (v === 'brands' && view === 'brand')) && 'is-active')}
-              onClick={() => dispatch({ type: 'navigate', view: v })}>{label}</button>
+            <a key={v} className={cx('site-nav__link', (view === v || (v === 'brands' && view === 'brand')) && 'is-active')}
+              onClick={() => dispatch({ type: 'navigate', view: v })}>{label}</a>
           ))}
         </nav>
       </div>
@@ -238,11 +234,9 @@ function App() {
     <AppCtx.Provider value={{ state, dispatch }}>
       <ToastProvider>
         <Header view={state.view} dispatch={dispatch} />
-        <main className="main-content">
-          <div className="container">
-            {renderPage()}
-          </div>
-        </main>
+        <div className="main-container">
+          {renderPage()}
+        </div>
         {state.modal?.kind === 'brand'   && <BrandModal   modal={state.modal} dispatch={dispatch} />}
         {state.modal?.kind === 'product' && <ProductModal modal={state.modal} dispatch={dispatch} />}
         <TweaksPanel title="Fuku Tweaks">
