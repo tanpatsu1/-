@@ -1,131 +1,24 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="light" data-density="standard" data-accent="ink">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>服 Brand Manager</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500&family=Noto+Serif+JP:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>服 Fuku — Brand Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Serif+JP:wght@400;500;600&family=Dancing+Script:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
-  <header class="site-header">
-    <div class="site-header__inner">
-      <div class="site-header__left">
-        <a href="/" class="site-title">
-          <span class="site-title__kanji">服</span>
-          <span class="site-title__text">Brand Manager</span>
-        </a>
-        <nav class="site-nav">
-          <a href="/" class="site-nav__link is-active">ブランド</a>
-        </nav>
-      </div>
-      <div class="header-right">
-        <span class="user-name" id="user-name"></span>
-        <button class="btn btn-ghost btn-sm" id="logout-btn">ログアウト</button>
-        <button class="btn btn-primary" id="add-brand-btn">＋ ブランドを追加</button>
-      </div>
-    </div>
-  </header>
+<div id="root"></div>
 
-  <main class="main-container">
-    <div class="section-header">
-      <div>
-        <h1 class="section-title"><em>Brands</em><span class="dot">.</span></h1>
-        <p class="section-sub"><span id="page-title">ブランド一覧</span></p>
-      </div>
-    </div>
-    <div class="search-sort-row">
-      <input class="search-input" type="search" id="search-input" placeholder="ブランドを検索…">
-      <select class="sort-select" id="sort-select">
-        <option value="name">名前順</option>
-        <option value="newest">登録が新しい順</option>
-        <option value="price_asc">価格帯：低→高</option>
-        <option value="price_desc">価格帯：高→低</option>
-      </select>
-    </div>
-    <div class="filter-row" id="filter-row"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-    <div id="brands-grid" class="brands-grid"></div>
-    <div id="empty-state" class="empty-state" hidden>
-      <div class="empty-state__icon">服</div>
-      <h2 class="empty-state__title">ブランドが未登録です</h2>
-      <p class="empty-state__text">最初のファッションブランドを追加してコレクションを始めましょう。</p>
-      <button class="btn btn-primary" id="empty-add-btn">＋ ブランドを追加</button>
-    </div>
-  </main>
-
-  <!-- モーダル -->
-  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal">
-      <div class="modal__header">
-        <h2 class="modal__title" id="modal-title">ブランドを追加</h2>
-        <button class="modal__close" id="modal-close" aria-label="閉じる">×</button>
-      </div>
-      <div class="modal__body">
-        <form id="brand-form" novalidate>
-          <div class="form-group">
-            <label class="form-label" for="f-url">公式サイトURL</label>
-            <div class="url-row">
-              <input class="form-input" type="url" id="f-url" placeholder="https://example.com" required>
-              <button type="button" class="btn btn-secondary btn-sm" id="fetch-btn">情報を取得</button>
-            </div>
-            <div class="fetch-status" id="fetch-status"></div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="f-name">ブランド名</label>
-            <input class="form-input" type="text" id="f-name" placeholder="例：Maison Margiela" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="f-description">説明 <span class="opt">（任意）</span></label>
-            <textarea class="form-textarea" id="f-description" rows="3" placeholder="ブランドの説明を入力..."></textarea>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="f-style">系統</label>
-              <input class="form-input" type="text" id="f-style" placeholder="例：ミニマリスト">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="f-price">価格帯</label>
-              <select class="form-select" id="f-price">
-                <option value="">—</option>
-                <option value="$">$ 低価格</option>
-                <option value="$$">$$ ミドル</option>
-                <option value="$$$">$$$ プレミアム</option>
-                <option value="$$$$">$$$$ ラグジュアリー</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="f-logo">ロゴ / 画像URL <span class="opt">（自動入力）</span></label>
-            <input class="form-input" type="url" id="f-logo" placeholder="https://...">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="f-tags">タグ <span class="opt">（任意・カンマ区切り）</span></label>
-            <input class="form-input" type="text" id="f-tags" placeholder="例: アウター, ミニマル">
-            <div class="genre-chips-wrap" id="tag-presets"></div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="f-memo">メモ <span class="opt">（任意）</span></label>
-            <textarea class="form-textarea" id="f-memo" rows="2" placeholder="セール時期、サイズ感など"></textarea>
-          </div>
-          <input type="hidden" id="f-og-image">
-        </form>
-      </div>
-      <div class="modal__footer">
-        <button type="button" class="btn btn-secondary" id="modal-cancel">キャンセル</button>
-        <button type="button" class="btn btn-primary" id="modal-save">保存</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast-stack" id="toast-container"></div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="/js/api.js"></script>
-  <script src="/js/auth.js"></script>
-  <script src="/js/modal.js"></script>
-  <script src="/js/index.js"></script>
+<script src="data.js"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel" src="brands.jsx"></script>
+<script type="text/babel" src="pages.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
 </body>
 </html>
