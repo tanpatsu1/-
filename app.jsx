@@ -224,6 +224,30 @@ function ProductModal({ modal, dispatch }) {
   );
 }
 
+const BOTTOM_NAV = [
+  { view: 'brands',    label: 'Brands' },
+  { view: 'products',  label: 'Items' },
+  { view: 'timeline',  label: 'Timeline' },
+  { view: 'bookmarks', label: 'Saved' },
+  { view: 'settings',  label: 'Settings' },
+];
+
+function BottomNav({ view, dispatch }) {
+  return (
+    <nav className="bottom-nav">
+      {BOTTOM_NAV.map(({ view: v, label }) => (
+        <button
+          key={v}
+          className={cx('bottom-nav__item', (view === v || (v === 'brands' && view === 'brand')) && 'is-active')}
+          onClick={() => dispatch({ type: 'navigate', view: v })}
+        >
+          {label}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
 function Header({ view, dispatch }) {
   return (
     <header className="site-header">
@@ -282,6 +306,7 @@ function App() {
               onChange={v => setTweak('accent', v)} />
           </TweakSection>
         </TweaksPanel>
+        <BottomNav view={state.view} dispatch={dispatch} />
       </ToastProvider>
     </AppCtx.Provider>
   );

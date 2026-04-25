@@ -510,3 +510,115 @@ html[data-theme="dark"] .form-select {
 }
 .tag-suggestion-item:hover { background: var(--surface-alt); }
 .tag-suggestion-item + .tag-suggestion-item { border-top: 1px solid var(--border); }
+
+/* ═══════════════════════════════════════════════
+   Mobile  (≤900px / ≤600px)
+═══════════════════════════════════════════════ */
+
+.bottom-nav { display: none; }
+
+@media (max-width: 900px) {
+  .site-nav { display: none; }
+
+  /* ── Bottom tab bar ── */
+  .bottom-nav {
+    display: flex;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    height: 56px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bottom-nav__item {
+    flex: 1; min-height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 400; letter-spacing: 0.04em;
+    color: var(--text-muted);
+    background: none; border: none; cursor: pointer;
+    transition: color var(--t);
+  }
+  .bottom-nav__item.is-active { color: var(--text-primary); font-weight: 600; }
+
+  /* コンテンツがタブバーに隠れないよう底余白 */
+  .main-container {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom) + 24px);
+  }
+
+  /* iOS自動ズーム防止（font-size < 16px でフォーカス時にズームする） */
+  .form-input,
+  .form-textarea,
+  .search-input,
+  .product-search-input,
+  .sort-select,
+  .bm-select { font-size: 16px; }
+
+  /* ── フィルタ行を横スクロール化（折り返し禁止で縦スペース節約） ── */
+  .genre-filter-row,
+  .filter-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    margin-left: -20px; margin-right: -20px;
+    padding-left: 20px; padding-right: 20px;
+  }
+  .genre-filter-row::-webkit-scrollbar,
+  .filter-row::-webkit-scrollbar { display: none; }
+
+  .filter-chip { min-height: 36px; white-space: nowrap; }
+
+  /* ブランドカードのタグも横スクロール */
+  .brand-card .tags-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-right: -16px;
+    padding-right: 16px;
+  }
+  .brand-card .tags-row::-webkit-scrollbar { display: none; }
+}
+
+@media (max-width: 600px) {
+  /* ── Modal → ボトムシート ── */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .modal::before {
+    content: '';
+    display: block;
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 12px auto 4px;
+  }
+
+  /* ── ブランド詳細：縦積み ── */
+  .brand-detail-header { flex-direction: column; gap: 20px; }
+  .brand-detail-image { align-self: flex-start; }
+
+  /* ── UI整理 ── */
+  .section-title { font-size: 40px; }
+  .section-header { margin-bottom: 28px; padding-bottom: 16px; }
+  .filter-chip { font-size: 11px; padding: 4px 10px; }
+
+  .brand-row__name { min-width: 0; }
+  .brand-row__meta { display: none; }
+
+  .tl-year__digits { font-size: 56px; }
+
+  .search-sort-row { flex-direction: column; gap: 8px; }
+  .search-input,
+  .sort-select { width: 100%; }
+}
