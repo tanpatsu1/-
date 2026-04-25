@@ -403,9 +403,14 @@ html[data-theme="dark"] .form-select {
   padding: 7px 14px; font-size: 11.5px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
   color: var(--text-muted); background: transparent; border: 0; border-radius: 3px; cursor: pointer;
   transition: background var(--t), color var(--t);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
 }
 .tl-filter__btn:hover { color: var(--text-primary); }
 .tl-filter__btn.is-active { background: var(--text-primary); color: var(--bg); }
+.tl-filter__total {
+  font-size: 10px; font-weight: 400; letter-spacing: 0; text-transform: none;
+  font-feature-settings: "tnum"; opacity: 0.6; line-height: 1;
+}
 .timeline { display: flex; flex-direction: column; gap: 72px; }
 .tl-year { display: grid; grid-template-columns: 180px 1fr; gap: 48px; }
 .tl-year__label { position: sticky; top: 88px; height: fit-content; }

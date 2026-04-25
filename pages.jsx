@@ -145,7 +145,18 @@ function TimelinePage() {
   const fmtMonth = (key) => MONTHS[+key.split('-')[1] - 1];
   const fmtDay   = (d) => d.split('-')[2].replace(/^0/, '');
   const statusDot = (s) => s === 'purchased' ? 'tl-dot--filled' : s === 'wishlist' ? 'tl-dot--ring' : 'tl-dot--open';
-  const filters = [['all','All'],['purchased','Purchased'],['wishlist','Wishlist'],['considering','Considering']];
+  const filterTotals = state.products.filter(p => p.actedAt).reduce((acc, p) => {
+    const price = p.price || 0;
+    acc.all += price;
+    acc[p.status] = (acc[p.status] || 0) + price;
+    return acc;
+  }, { all: 0, purchased: 0, wishlist: 0, considering: 0 });
+  const filters = [
+    ['all',        'All',        filterTotals.all],
+    ['purchased',  'Purchased',  filterTotals.purchased],
+    ['wishlist',   'Wishlist',   filterTotals.wishlist],
+    ['considering','Considering',filterTotals.considering],
+  ];
   return (
     <div>
       <div className="section-header">
@@ -161,8 +172,11 @@ function TimelinePage() {
         </div>
         <div className="section-header__right">
           <div className="tl-filter">
-            {filters.map(([v, label]) => (
-              <button key={v} className={cx('tl-filter__btn', filter === v && 'is-active')} onClick={() => setFilter(v)}>{label}</button>
+            {filters.map(([v, label, total]) => (
+              <button key={v} className={cx('tl-filter__btn', filter === v && 'is-active')} onClick={() => setFilter(v)}>
+                <span>{label}</span>
+                <span className="tl-filter__total">{fmtYen(total)}</span>
+              </button>
             ))}
           </div>
         </div>
