@@ -511,6 +511,26 @@ html[data-theme="dark"] .form-select {
 .tag-suggestion-item:hover { background: var(--surface-alt); }
 .tag-suggestion-item + .tag-suggestion-item { border-top: 1px solid var(--border); }
 
+/* ═══ Swatch picker ═══ */
+.swatch-picker-row { display: flex; align-items: center; gap: 12px; }
+.swatch-picker { display: flex; flex-wrap: wrap; gap: 7px; }
+.swatch-picker__dot {
+  width: 26px; height: 26px; border-radius: 50%; padding: 0;
+  border: 2px solid transparent; cursor: pointer;
+  transition: transform 0.1s, border-color 0.1s, outline 0.1s;
+  outline: 2px solid transparent; outline-offset: 2px;
+}
+.swatch-picker__dot:hover { transform: scale(1.18); }
+.swatch-picker__dot.is-selected {
+  border-color: var(--bg);
+  outline-color: var(--text-primary);
+  transform: scale(1.1);
+}
+
+/* ═══ Settings extras ═══ */
+.settings-actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.settings-section--danger { border-top: 1px solid var(--border); padding-top: 20px; }
+
 /* ═══════════════════════════════════════════════
    Mobile  (≤900px / ≤600px)
 ═══════════════════════════════════════════════ */

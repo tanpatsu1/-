@@ -352,7 +352,42 @@ function SettingsPage() {
         </div>
       </div>
       <div className="settings-section" style={{ marginTop: 24 }}>
-        <h2 className="settings-section-title">データ</h2>
+        <h2 className="settings-section-title">バックアップ</h2>
+        <p className="settings-section-desc">データをJSONファイルとして書き出し・読み込みができます。</p>
+        <div className="settings-actions-row">
+          <button className="btn btn-secondary btn-sm" onClick={() => {
+            const data = { brands: state.brands, products: state.products, genres: state.genres };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = Object.assign(document.createElement('a'), {
+              href: URL.createObjectURL(blob),
+              download: `mise-${new Date().toISOString().slice(0, 10)}.json`,
+            });
+            a.click(); URL.revokeObjectURL(a.href);
+          }}>↓ エクスポート</button>
+          <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+            ↑ インポート
+            <input type="file" accept=".json" style={{ display: 'none' }} onChange={e => {
+              const file = e.target.files[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = ev => {
+                try {
+                  const data = JSON.parse(ev.target.result);
+                  if (!Array.isArray(data.brands) || !Array.isArray(data.products)) {
+                    toast.show('無効なファイルです', { error: true }); return;
+                  }
+                  dispatch({ type: 'importData', data });
+                  toast.show('インポートしました');
+                } catch { toast.show('ファイルの読み込みに失敗しました', { error: true }); }
+              };
+              reader.readAsText(file);
+              e.target.value = '';
+            }} />
+          </label>
+        </div>
+      </div>
+      <div className="settings-section settings-section--danger" style={{ marginTop: 24 }}>
+        <h2 className="settings-section-title">データをリセット</h2>
         <p className="settings-section-desc">ブランド・アイテム・ジャンルをすべて初期状態に戻します。この操作は取り消せません。</p>
         <button className="btn btn-danger-ghost btn-sm" onClick={() => {
           if (!confirm('すべてのデータを削除してリセットしますか？')) return;

@@ -90,6 +90,8 @@ function appReducer(state, action) {
         genres: state.genres.filter(g => g.id !== action.id),
         brands: state.brands.map(b => ({ ...b, genres: b.genres.filter(id => id !== action.id) })),
       };
+    case 'importData':
+      return { ...state, brands: action.data.brands, products: action.data.products, genres: action.data.genres || state.genres };
     default:
       return state;
   }
@@ -135,6 +137,7 @@ function BrandModal({ modal, dispatch }) {
   const [price, setPrice] = useState(brand?.price || 2);
   const [tags, setTags] = useState(brand?.tags?.join(', ') || '');
   const [note, setNote] = useState(brand?.note || '');
+  const [swatch, setSwatch] = useState(brand?.swatch || { bg: '#E8E6E1', fg: '#8A8882', style: 'paper' });
   const toast = useToast();
   const toggleGenre = (id) => setSelGenres(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]);
   const save = () => {
@@ -148,7 +151,7 @@ function BrandModal({ modal, dispatch }) {
         genres: selGenres, price,
         tags: tags.split(',').map(t => t.trim()).filter(Boolean),
         note: note.trim(),
-        swatch: brand?.swatch || { bg: '#E8E6E1', fg: '#8A8882', style: 'paper' },
+        swatch,
         addedAt: brand?.addedAt || new Date().toISOString().slice(0, 10),
       },
     });
@@ -159,6 +162,12 @@ function BrandModal({ modal, dispatch }) {
       footer={<><button className="btn btn-ghost" onClick={() => dispatch({ type: 'closeBrandModal' })}>キャンセル</button><button className="btn btn-primary" onClick={save}>保存</button></>}>
       <div className="form-group"><label className="form-label">ブランド名 *</label>
         <input className="form-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="例: Atelier Nord" autoFocus /></div>
+      <div className="form-group"><label className="form-label">カラー</label>
+        <div className="swatch-picker-row">
+          <Swatch swatch={swatch} initial={name.trim().charAt(0).toUpperCase() || '?'} size="sm" style={{ width: 44, height: 44, flexShrink: 0 }} />
+          <SwatchPicker swatch={swatch} onChange={setSwatch} />
+        </div>
+      </div>
       <div className="form-group"><label className="form-label">公式サイト URL</label>
         <input className="form-input" type="url" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." /></div>
       <div className="form-group"><label className="form-label">説明</label>

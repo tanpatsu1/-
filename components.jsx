@@ -110,4 +110,38 @@ function Modal({ open, onClose, title, children, footer, size = 'md' }) {
   );
 }
 
-Object.assign(window, { cx, fmtYen, priceSymbol, Swatch, Badge, StatusBadge, Tag, Button, Modal, ToastProvider, useToast, AppCtx, useApp });
+const SWATCH_PRESETS = [
+  { bg: '#1F1E1B', fg: '#8A8780', style: 'mono' },
+  { bg: '#1A2035', fg: '#7A8898', style: 'mono' },
+  { bg: '#1E2818', fg: '#6A8870', style: 'mono' },
+  { bg: '#2A1818', fg: '#907070', style: 'mono' },
+  { bg: '#3A3830', fg: '#909080', style: 'mono' },
+  { bg: '#2A3248', fg: '#7A8AA0', style: 'mono' },
+  { bg: '#2E3A2E', fg: '#7A907A', style: 'mono' },
+  { bg: '#3A2830', fg: '#907080', style: 'mono' },
+  { bg: '#E8E6E1', fg: '#8A8882', style: 'paper' },
+  { bg: '#F0EEE9', fg: '#A8A49C', style: 'paper' },
+  { bg: '#C4C1BA', fg: '#8A8882', style: 'paper' },
+  { bg: '#D8D8E0', fg: '#8888A0', style: 'paper' },
+  { bg: '#B8C4B8', fg: '#6A8870', style: 'bold' },
+  { bg: '#C8B8A8', fg: '#8A7068', style: 'bold' },
+  { bg: '#B8C0CC', fg: '#6A7888', style: 'bold' },
+  { bg: '#CCC0C4', fg: '#907080', style: 'bold' },
+];
+
+function SwatchPicker({ swatch, onChange }) {
+  return (
+    <div className="swatch-picker">
+      {SWATCH_PRESETS.map((p, i) => (
+        <button key={i} type="button"
+          className={cx('swatch-picker__dot', swatch?.bg === p.bg && 'is-selected')}
+          style={{ background: p.bg }}
+          onClick={() => onChange(p)}
+          aria-label={p.bg}
+        />
+      ))}
+    </div>
+  );
+}
+
+Object.assign(window, { cx, fmtYen, priceSymbol, Swatch, SwatchPicker, Badge, StatusBadge, Tag, Button, Modal, ToastProvider, useToast, AppCtx, useApp });
