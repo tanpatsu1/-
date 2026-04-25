@@ -25,6 +25,14 @@ function BrandsPage() {
   }, [brands]);
 
   const setFilter = (patch) => dispatch({ type: 'setBrandFilters', patch });
+  const searchRef = React.useRef(null);
+  React.useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus(); }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
 
   return (
     <div>
@@ -46,7 +54,7 @@ function BrandsPage() {
         </div>
       </div>
       <div className="search-sort-row">
-        <input className="search-input" type="search" placeholder="ブランド名・タグで検索…" value={search} onChange={e => setFilter({ search: e.target.value })} />
+        <input ref={searchRef} className="search-input" type="search" placeholder="ブランド名・タグで検索… ⌘K" value={search} onChange={e => setFilter({ search: e.target.value })} />
         <select className="sort-select" value={sort} onChange={e => setFilter({ sort: e.target.value })}>
           <option value="name">名前順</option>
           <option value="recent">登録が新しい順</option>

@@ -58,6 +58,14 @@ function ProductsPage() {
   const [status, setStatus] = useState('all');
   const [tag, setTag] = useState('all');
   const [sort, setSort] = useState('default');
+  const searchRef = useRef(null);
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus(); }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
   const allTags = Array.from(new Set(state.products.flatMap(p => p.tags)));
   const filtered = state.products.filter(p => {
     if (brandId !== 'all' && p.brandId !== brandId) return false;
@@ -87,7 +95,7 @@ function ProductsPage() {
         </div>
       </div>
       <div className="search-sort-row">
-        <input className="search-input" type="search" placeholder="Search items · brands…" value={search} onChange={e => setSearch(e.target.value)} />
+        <input ref={searchRef} className="search-input" type="search" placeholder="Search items · brands… ⌘K" value={search} onChange={e => setSearch(e.target.value)} />
         <select className="sort-select" value={brandId} onChange={e => setBrandId(e.target.value)}>
           <option value="all">すべてのブランド</option>
           {state.brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}

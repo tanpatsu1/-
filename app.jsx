@@ -164,7 +164,7 @@ function BrandModal({ modal, dispatch }) {
         <input className="form-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="例: Atelier Nord" autoFocus /></div>
       <div className="form-group"><label className="form-label">カラー</label>
         <div className="swatch-picker-row">
-          <Swatch swatch={swatch} initial={name.trim().charAt(0).toUpperCase() || '?'} size="sm" style={{ width: 44, height: 44, flexShrink: 0 }} />
+          <Swatch swatch={swatch} initial={name.trim().charAt(0).toUpperCase() || '?'} size="md" style={{ width: 56, height: 56, flexShrink: 0, borderRadius: 8 }} />
           <SwatchPicker swatch={swatch} onChange={setSwatch} />
         </div>
       </div>
@@ -197,6 +197,7 @@ function ProductModal({ modal, dispatch }) {
   const [tags, setTags] = useState(product?.tags?.join(', ') || '');
   const [status, setStatus] = useState(product?.status || 'wishlist');
   const [actedAt, setActedAt] = useState(product?.actedAt || new Date().toISOString().slice(0, 10));
+  const [swatch, setSwatch] = useState(product?.swatch || { bg: '#E8E6E1', fg: '#8A8882', style: 'paper' });
   const toast = useToast();
   const save = () => {
     if (!name.trim()) { toast.show('商品名を入力してください', { error: true }); return; }
@@ -208,7 +209,7 @@ function ProductModal({ modal, dispatch }) {
         price: Number(priceStr) || 0,
         tags: tags.split(',').map(t => t.trim()).filter(Boolean),
         status, bookmarked: product?.bookmarked || false,
-        swatch: product?.swatch || { bg: '#E8E6E1', fg: '#8A8882' },
+        swatch,
         actedAt,
       },
     });
@@ -225,6 +226,12 @@ function ProductModal({ modal, dispatch }) {
       )}
       <div className="form-group"><label className="form-label">商品名 *</label>
         <input className="form-input" type="text" value={name} onChange={e => setName(e.target.value)} autoFocus /></div>
+      <div className="form-group"><label className="form-label">カラー</label>
+        <div className="swatch-picker-row">
+          <Swatch swatch={swatch} initial={name.trim().charAt(0).toUpperCase() || '?'} size="md" style={{ width: 56, height: 56, flexShrink: 0, borderRadius: 8 }} />
+          <SwatchPicker swatch={swatch} onChange={setSwatch} />
+        </div>
+      </div>
       <div className="form-group"><label className="form-label">価格（円）</label>
         <input className="form-input" type="number" value={priceStr} onChange={e => setPriceStr(e.target.value)} placeholder="例: 48000" /></div>
       <div className="form-group"><label className="form-label">タグ（カンマ区切り）</label>
