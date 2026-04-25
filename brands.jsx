@@ -34,7 +34,7 @@ function BrandsPage() {
           <p className="section-sub">
             <span>{filtered.length} of {brands.length}</span>
             <span className="sub-sep">·</span>
-            <span>{state.genres.length} genres</span>
+            <span>{state.genres.length} ジャンル</span>
           </p>
         </div>
         <div className="section-header__right">
@@ -114,7 +114,7 @@ function BrandCard({ brand, products }) {
         {brand.tags.length > 0 && (
           <div className="tags-row">{brand.tags.map(t => <Tag key={t}>{t}</Tag>)}</div>
         )}
-        <p className="brand-card__count">{products.length} items</p>
+        <p className="brand-card__count">{products.length} アイテム</p>
       </div>
       <div className="brand-card__actions">
         <button className="btn btn-ghost btn-sm" onClick={e => { e.stopPropagation(); dispatch({ type: 'openBrandModal', brand }); }}>編集</button>
@@ -139,7 +139,7 @@ function BrandRow({ brand, products }) {
         <Badge kind="price">{priceSymbol(brand.price)}</Badge>
         {brand.tags.slice(0, 3).map(t => <Tag key={t}>{t}</Tag>)}
       </div>
-      <span className="brand-row__count">{products.length} items</span>
+      <span className="brand-row__count">{products.length} アイテム</span>
       <div className="brand-row__actions">
         <button className="btn btn-ghost btn-sm" onClick={e => { e.stopPropagation(); dispatch({ type: 'openBrandModal', brand }); }}>編集</button>
         <button className="btn btn-danger-ghost btn-sm" onClick={e => {

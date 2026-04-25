@@ -89,6 +89,36 @@ function appReducer(state, action) {
   }
 }
 
+function TagInput({ value, onChange, allTags }) {
+  const [show, setShow] = useState(false);
+  const parts = value.split(',').map(t => t.trim()).filter(Boolean);
+  const lastWord = value.split(',').pop().trim();
+  const suggestions = allTags.filter(t =>
+    !parts.includes(t) && (lastWord === '' || t.toLowerCase().startsWith(lastWord.toLowerCase()))
+  );
+  const addTag = (tag) => {
+    const rest = value.split(',').slice(0, -1).map(t => t.trim()).filter(Boolean);
+    onChange([...rest, tag].join(', ') + ', ');
+  };
+  return (
+    <div className="tag-input-wrap">
+      <input className="form-input" type="text" value={value}
+        onChange={e => { onChange(e.target.value); setShow(true); }}
+        onFocus={() => setShow(true)}
+        onBlur={() => setTimeout(() => setShow(false), 150)}
+        placeholder="アウター, シューズ, ..." />
+      {show && suggestions.length > 0 && (
+        <div className="tag-suggestions">
+          {suggestions.slice(0, 8).map(t => (
+            <button key={t} type="button" className="tag-suggestion-item"
+              onMouseDown={e => { e.preventDefault(); addTag(t); }}>{t}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BrandModal({ modal, dispatch }) {
   const { state } = useApp();
   const brand = modal.brand;
@@ -136,7 +166,7 @@ function BrandModal({ modal, dispatch }) {
           <button key={n} type="button" className={cx('price-seg__btn', price === n && 'is-active')} onClick={() => setPrice(n)}>{'¥'.repeat(n)}</button>
         ))}</div></div>
       <div className="form-group"><label className="form-label">タグ（カンマ区切り）</label>
-        <input className="form-input" type="text" value={tags} onChange={e => setTags(e.target.value)} placeholder="アウター, シューズ, ..." /></div>
+        <TagInput value={tags} onChange={setTags} allTags={[...new Set(state.brands.flatMap(b => b.tags))]} /></div>
       <div className="form-group"><label className="form-label">メモ</label>
         <textarea className="form-textarea" value={note} onChange={e => setNote(e.target.value)} rows={2} /></div>
     </Modal>
@@ -239,7 +269,7 @@ function App() {
         </div>
         {state.modal?.kind === 'brand'   && <BrandModal   modal={state.modal} dispatch={dispatch} />}
         {state.modal?.kind === 'product' && <ProductModal modal={state.modal} dispatch={dispatch} />}
-        <TweaksPanel title="Fuku Tweaks">
+        <TweaksPanel title="MISE Tweaks">
           <TweakSection label="Appearance">
             <TweakRadio label="Theme"   value={tweaks.theme}
               options={[{value:'light',label:'Light'},{value:'dark',label:'Dark'}]}

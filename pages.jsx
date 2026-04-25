@@ -174,11 +174,15 @@ function TimelinePage() {
           {yearKeys.map(year => {
             const monthKeys = Object.keys(years[year]).sort((a, b) => b.localeCompare(a));
             const yearCount = monthKeys.reduce((s, k) => s + years[year][k].length, 0);
+            const yearSpend = monthKeys.reduce((sum, mk) =>
+              sum + years[year][mk].filter(p => p.status === 'purchased').reduce((s, p) => s + (p.price || 0), 0)
+            , 0);
             return (
               <section key={year} className="tl-year">
                 <aside className="tl-year__label">
                   <div className="tl-year__digits">{year}</div>
                   <div className="tl-year__meta">{yearCount} {yearCount === 1 ? 'item' : 'items'}</div>
+                  {yearSpend > 0 && <div className="tl-year__spend">{fmtYen(yearSpend)}</div>}
                 </aside>
                 <div className="tl-year__body">
                   {monthKeys.map(mk => (
