@@ -48,9 +48,9 @@ function _buildTagPresets() {
   const wrap = document.getElementById('tag-presets');
   if (!wrap) return;
   wrap.innerHTML = TAG_PRESETS.map(t =>
-    `<button type="button" class="tag-preset-btn" data-tag="${t}">${t}</button>`
+    `<button type="button" class="genre-chip-btn" data-tag="${t}">${t}</button>`
   ).join('');
-  wrap.querySelectorAll('.tag-preset-btn').forEach(btn =>
+  wrap.querySelectorAll('.genre-chip-btn').forEach(btn =>
     btn.addEventListener('click', () => _addTag(btn.dataset.tag))
   );
 }

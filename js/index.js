@@ -102,13 +102,13 @@ function _buildCard(brand) {
     <div class="brand-card__image js-nav">
       ${imgUrl
         ? `<img src="${escHtml(imgUrl)}" alt="${escHtml(brand.name)}" loading="lazy">`
-        : `<div class="brand-card__placeholder">${initial}</div>`
+        : `<div class="swatch"><span class="swatch__initial" style="font-size:32px">${initial}</span></div>`
       }
     </div>
     <div class="brand-card__body js-nav">
       <h2 class="brand-card__name">${escHtml(brand.name)}</h2>
       <div class="brand-card__meta">
-        ${brand.style       ? `<span class="badge badge-style">${escHtml(brand.style)}</span>` : ''}
+        ${brand.style       ? `<span class="badge badge-genre">${escHtml(brand.style)}</span>` : ''}
         ${brand.price_range ? `<span class="badge badge-price">${escHtml(brand.price_range)}</span>` : ''}
       </div>
       ${tags.length ? `<div class="tags-row" style="margin-top:6px">${tags.map(t => `<span class="tag-chip">${escHtml(t)}</span>`).join('')}</div>` : ''}

@@ -3,16 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ブランド管理</title>
+  <title>服 Brand Manager</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500&family=Noto+Serif+JP:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
   <header class="site-header">
     <div class="site-header__inner">
-      <a href="/" class="site-title">Brand <span>Manager</span></a>
+      <div class="site-header__left">
+        <a href="/" class="site-title">
+          <span class="site-title__kanji">服</span>
+          <span class="site-title__text">Brand Manager</span>
+        </a>
+        <nav class="site-nav">
+          <a href="/" class="site-nav__link is-active">ブランド</a>
+        </nav>
+      </div>
       <div class="header-right">
         <span class="user-name" id="user-name"></span>
         <button class="btn btn-ghost btn-sm" id="logout-btn">ログアウト</button>
@@ -23,7 +31,10 @@
 
   <main class="main-container">
     <div class="section-header">
-      <h1 class="section-title" id="page-title">ブランド一覧</h1>
+      <div>
+        <h1 class="section-title"><em>Brands</em><span class="dot">.</span></h1>
+        <p class="section-sub"><span id="page-title">ブランド一覧</span></p>
+      </div>
     </div>
     <div class="search-sort-row">
       <input class="search-input" type="search" id="search-input" placeholder="ブランドを検索…">
@@ -38,7 +49,7 @@
 
     <div id="brands-grid" class="brands-grid"></div>
     <div id="empty-state" class="empty-state" hidden>
-      <div class="empty-state__icon">👗</div>
+      <div class="empty-state__icon">服</div>
       <h2 class="empty-state__title">ブランドが未登録です</h2>
       <p class="empty-state__text">最初のファッションブランドを追加してコレクションを始めましょう。</p>
       <button class="btn btn-primary" id="empty-add-btn">＋ ブランドを追加</button>
@@ -93,7 +104,7 @@
           <div class="form-group">
             <label class="form-label" for="f-tags">タグ <span class="opt">（任意・カンマ区切り）</span></label>
             <input class="form-input" type="text" id="f-tags" placeholder="例: アウター, ミニマル">
-            <div class="tag-presets" id="tag-presets"></div>
+            <div class="genre-chips-wrap" id="tag-presets"></div>
           </div>
           <div class="form-group">
             <label class="form-label" for="f-memo">メモ <span class="opt">（任意）</span></label>
@@ -109,7 +120,7 @@
     </div>
   </div>
 
-  <div class="toast-container" id="toast-container"></div>
+  <div class="toast-stack" id="toast-container"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/js/api.js"></script>

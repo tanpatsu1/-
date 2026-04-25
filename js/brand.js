@@ -54,13 +54,13 @@ function _renderDetail(brand) {
   const initial = escHtml(brand.name.charAt(0).toUpperCase());
 
   wrap.innerHTML = imgUrl
-    ? `<img src="${escHtml(imgUrl)}" alt="${escHtml(brand.name)}" onerror="this.parentElement.innerHTML='<div class=\\"brand-detail-placeholder\\">${initial}</div>'">`
-    : `<div class="brand-detail-placeholder">${initial}</div>`;
+    ? `<img src="${escHtml(imgUrl)}" alt="${escHtml(brand.name)}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.innerHTML='<div class=\\"swatch\\" style=\\"width:100%;height:100%\\"><span class=\\"swatch__initial\\" style=\\"font-size:64px\\">${initial}</span></div>'">`
+    : `<div class="swatch" style="width:100%;height:100%"><span class="swatch__initial" style="font-size:64px">${initial}</span></div>`;
 
   document.getElementById('detail-name').textContent = brand.name;
 
   document.getElementById('detail-meta').innerHTML = [
-    brand.style       ? `<span class="badge badge-style">${escHtml(brand.style)}</span>` : '',
+    brand.style       ? `<span class="badge badge-genre">${escHtml(brand.style)}</span>` : '',
     brand.price_range ? `<span class="badge badge-price">${escHtml(brand.price_range)}</span>` : '',
   ].join('');
 
