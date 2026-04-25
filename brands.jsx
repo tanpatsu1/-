@@ -101,7 +101,7 @@ function BrandCard({ brand, products }) {
   return (
     <article className="brand-card" onClick={() => dispatch({ type: 'openBrand', id: brand.id })}>
       <div className="brand-card__image">
-        <Swatch swatch={brand.swatch} initial={brand.initial} size="md" />
+        <Swatch swatch={brand.swatch} initial={brand.initial || brand.name?.charAt(0).toUpperCase()} size="md" />
       </div>
       <div className="brand-card__body">
         <h2 className="brand-card__name">{brand.name}</h2>
@@ -116,7 +116,7 @@ function BrandRow({ brand, products }) {
   return (
     <div className="brand-row" onClick={() => dispatch({ type: 'openBrand', id: brand.id })}>
       <div className="brand-row__logo">
-        <Swatch swatch={brand.swatch} initial={brand.initial} size="sm" />
+        <Swatch swatch={brand.swatch} initial={brand.initial || brand.name?.charAt(0).toUpperCase()} size="sm" />
       </div>
       <span className="brand-row__name">{brand.name}</span>
       <span className="brand-row__meta-line">{priceSymbol(brand.price)}&ensp;·&ensp;{products.length} items</span>
@@ -147,7 +147,7 @@ function BrandDetail({ brandId }) {
       <a className="back-link" onClick={() => dispatch({ type: 'navigate', view: 'brands' })}>← Back to Brands</a>
       <div className="brand-detail-header">
         <div className="brand-detail-image">
-          <Swatch swatch={brand.swatch} initial={brand.initial} size="xl" />
+          <Swatch swatch={brand.swatch} initial={brand.initial || brand.name?.charAt(0).toUpperCase()} size="xl" />
         </div>
         <div className="brand-detail-info">
           <h1>{brand.name}</h1>

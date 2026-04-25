@@ -12,7 +12,8 @@ const UserCtx = createContext(null);
 const useUser = () => useContext(UserCtx);
 
 function Swatch({ swatch, initial, size = 'md', style }) {
-  const { bg, fg, style: kind } = swatch || { bg: '#e8e8e8', fg: '#b0b0b0', style: 'paper' };
+  const FALLBACK = { bg: '#1F1E1B', fg: '#8A8780', style: 'mono' };
+  const { bg, fg, style: kind } = (swatch?.bg ? swatch : FALLBACK);
   const fontSize = size === 'xl' ? 96 : size === 'lg' ? 56 : size === 'sm' ? 18 : 38;
   let bgStyle = { background: bg };
   if (kind === 'mono') {
@@ -31,6 +32,7 @@ function Swatch({ swatch, initial, size = 'md', style }) {
 }
 
 function shift(hex, amt) {
+  if (typeof hex !== 'string' || !hex.startsWith('#')) return '#888888';
   const h = hex.replace('#', '');
   const r = Math.max(0, Math.min(255, parseInt(h.substr(0,2),16) + amt));
   const g = Math.max(0, Math.min(255, parseInt(h.substr(2,2),16) + amt));

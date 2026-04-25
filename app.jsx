@@ -144,7 +144,7 @@ function BrandModal({ modal, dispatch }) {
   const [priceNote, setPriceNote] = useState(brand?.priceNote || '');
   const [tags, setTags] = useState(brand?.tags?.join(', ') || '');
   const [note, setNote] = useState(brand?.note || '');
-  const [swatch, setSwatch] = useState(brand?.swatch || { bg: '#E8E6E1', fg: '#8A8882', style: 'paper' });
+  const [swatch, setSwatch] = useState(brand?.swatch?.bg ? brand.swatch : { bg: '#1F1E1B', fg: '#8A8780', style: 'mono' });
   const [fetching, setFetching] = useState(false);
   const toast = useToast();
   const toggleGenre = (id) => setSelGenres(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]);
@@ -227,7 +227,7 @@ function ProductModal({ modal, dispatch }) {
   const [tags, setTags] = useState(product?.tags?.join(', ') || '');
   const [status, setStatus] = useState(product?.status || 'wishlist');
   const [actedAt, setActedAt] = useState(product?.actedAt || new Date().toISOString().slice(0, 10));
-  const [swatch, setSwatch] = useState(product?.swatch || { bg: '#E8E6E1', fg: '#8A8882', style: 'paper' });
+  const [swatch, setSwatch] = useState(product?.swatch?.bg ? product.swatch : { bg: '#1F1E1B', fg: '#8A8780', style: 'mono' });
   const toast = useToast();
   const save = () => {
     if (!name.trim()) { toast.show('商品名を入力してください', { error: true }); return; }

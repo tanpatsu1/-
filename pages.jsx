@@ -290,7 +290,7 @@ function BookmarksPage() {
 
 function SettingsPage() {
   const { state, dispatch } = useApp();
-  const { user } = useUser();
+  const { user, supabase } = useUser();
   const toast = useToast();
   const [newGenre, setNewGenre] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -396,8 +396,9 @@ function SettingsPage() {
       <div className="settings-section settings-section--danger" style={{ marginTop: 24 }}>
         <h2 className="settings-section-title">データをリセット</h2>
         <p className="settings-section-desc">ブランド・アイテム・ジャンルをすべて初期状態に戻します。この操作は取り消せません。</p>
-        <button className="btn btn-danger-ghost btn-sm" onClick={() => {
+        <button className="btn btn-danger-ghost btn-sm" onClick={async () => {
           if (!confirm('すべてのデータを削除してリセットしますか？')) return;
+          await supabase.from('user_data').delete().eq('user_id', user.id);
           localStorage.removeItem('mise_v1');
           location.reload();
         }}>データをリセット</button>
