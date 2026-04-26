@@ -10,8 +10,12 @@ module.exports = async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
   // Vercel automatically adds Authorization: Bearer $CRON_SECRET for cron invocations
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return res.status(500).json({ error: 'CRON_SECRET is not configured' });
+  }
   const secret = (req.headers['authorization'] ?? '').replace('Bearer ', '');
-  if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
+  if (secret !== cronSecret) {
     return res.status(401).json({ error: 'unauthorized' });
   }
 
@@ -60,9 +64,12 @@ async function _syncBrand(brandId, brandUrl) {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       },
     });
-    html = await resp.text();
-  } finally {
     clearTimeout(timer);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    html = await resp.text();
+  } catch (err) {
+    clearTimeout(timer);
+    throw err;
   }
 
   const products = _extract(html, brandUrl);

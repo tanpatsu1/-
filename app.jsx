@@ -341,8 +341,8 @@ function Header({ view, dispatch }) {
       <div className="site-header__inner">
         <nav className="site-nav">
           {NAV_ITEMS.map(({ view: v, label }) => (
-            <a key={v} className={cx('site-nav__link', (view === v || (v === 'brands' && view === 'brand')) && 'is-active')}
-              onClick={() => dispatch({ type: 'navigate', view: v })}>{label}</a>
+            <button key={v} className={cx('site-nav__link', (view === v || (v === 'brands' && view === 'brand')) && 'is-active')}
+              onClick={() => dispatch({ type: 'navigate', view: v })}>{label}</button>
           ))}
         </nav>
       </div>
@@ -350,12 +350,34 @@ function Header({ view, dispatch }) {
   );
 }
 
+// Handles debounced Supabase persistence with toast on failure.
+// Must live inside ToastProvider to access useToast.
+function DataSync({ state, user, supabase, loaded }) {
+  const toast = useToast();
+  const saveRef = useRef(null);
+  useEffect(() => {
+    if (!loaded) return;
+    clearTimeout(saveRef.current);
+    saveRef.current = setTimeout(async () => {
+      const { error } = await supabase.from('user_data').upsert({
+        user_id: user.id,
+        data: { brands: state.brands, products: state.products, genres: state.genres },
+        updated_at: new Date().toISOString(),
+      });
+      if (error) {
+        toast.show('保存に失敗しました。データをエクスポートしてバックアップしてください。', { error: true, duration: 6000 });
+      }
+    }, 1000);
+    return () => clearTimeout(saveRef.current);
+  }, [state.brands, state.products, state.genres, loaded]);
+  return null;
+}
+
 function App({ user, supabase }) {
   const [state, dispatch] = useReducer(appReducer, INITIAL);
   const [tweaks, setTweak] = useTweaks(DEFAULT_TWEAKS);
   const [loaded, setLoaded] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const saveRef = useRef(null);
 
   useEffect(() => {
     document.documentElement.dataset.theme   = tweaks.theme;
@@ -385,19 +407,6 @@ function App({ user, supabase }) {
     if (loaded && !localStorage.getItem('mise_ob_' + user.id)) setShowOnboarding(true);
   }, [loaded]);
 
-  // Debounced save to Supabase on data changes
-  useEffect(() => {
-    if (!loaded) return;
-    clearTimeout(saveRef.current);
-    saveRef.current = setTimeout(() => {
-      supabase.from('user_data').upsert({
-        user_id: user.id,
-        data: { brands: state.brands, products: state.products, genres: state.genres },
-        updated_at: new Date().toISOString(),
-      });
-    }, 1000);
-  }, [state.brands, state.products, state.genres, loaded]);
-
   const renderPage = () => {
     switch (state.view) {
       case 'brand':     return <BrandDetail brandId={state.activeBrandId} />;
@@ -413,6 +422,7 @@ function App({ user, supabase }) {
     <UserCtx.Provider value={{ user, supabase }}>
       <AppCtx.Provider value={{ state, dispatch }}>
         <ToastProvider>
+          <DataSync state={state} user={user} supabase={supabase} loaded={loaded} />
           <Header view={state.view} dispatch={dispatch} />
           <div className="main-container">
             {loaded ? renderPage() : (

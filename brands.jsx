@@ -144,7 +144,7 @@ function BrandDetail({ brandId }) {
   });
   return (
     <div>
-      <a className="back-link" onClick={() => dispatch({ type: 'navigate', view: 'brands' })}>← Back to Brands</a>
+      <button className="back-link" onClick={() => dispatch({ type: 'navigate', view: 'brands' })}>← Back to Brands</button>
       <div className="brand-detail-header">
         <div className="brand-detail-image">
           <Swatch swatch={brand.swatch} initial={brand.initial || brand.name?.charAt(0).toUpperCase()} size="xl" />

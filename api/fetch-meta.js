@@ -1,3 +1,12 @@
+const PRIVATE_HOST =
+  /^(localhost|0\.0\.0\.0|127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|::1|fd[\da-f]{2}:)/i;
+
+function _isPrivateHost(hostname) {
+  return PRIVATE_HOST.test(hostname)
+    || hostname.endsWith('.local')
+    || hostname.endsWith('.internal');
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
@@ -9,12 +18,22 @@ module.exports = async function handler(req, res) {
   const { url } = req.body ?? {};
   if (!url) return res.status(400).json({ error: 'url is required' });
 
-  let origin;
+  let parsed;
   try {
-    origin = new URL(url).origin;
+    parsed = new URL(url);
   } catch {
     return res.status(400).json({ error: 'invalid url' });
   }
+
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    return res.status(400).json({ error: 'only http/https urls are allowed' });
+  }
+
+  if (_isPrivateHost(parsed.hostname)) {
+    return res.status(400).json({ error: 'url not allowed' });
+  }
+
+  const origin = parsed.origin;
 
   let html;
   try {
@@ -29,7 +48,18 @@ module.exports = async function handler(req, res) {
       },
     });
     clearTimeout(timer);
-    html = await resp.text();
+
+    if (!resp.ok) {
+      return res.status(422).json({ error: `url returned ${resp.status}` });
+    }
+
+    const ct = resp.headers.get('content-type') || '';
+    if (!ct.includes('text/html') && !ct.includes('application/xhtml')) {
+      return res.status(422).json({ error: 'url does not serve html' });
+    }
+
+    const raw = await resp.text();
+    html = raw.slice(0, 1_000_000);
   } catch (err) {
     return res.status(422).json({ error: 'failed to fetch url', details: err.message });
   }
