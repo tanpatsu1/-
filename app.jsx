@@ -427,7 +427,7 @@ function App({ user, supabase }) {
           <TweaksPanel title="MISE Tweaks">
             <TweakSection label="Appearance">
               <TweakRadio label="Theme"   value={tweaks.theme}
-                options={[{value:'light',label:'Light'},{value:'dark',label:'Dark'}]}
+                options={[{value:'light',label:'Light'},{value:'sepia',label:'Sepia'},{value:'dark',label:'Dark'}]}
                 onChange={v => setTweak('theme', v)} />
               <TweakRadio label="Density" value={tweaks.density}
                 options={[{value:'compact',label:'Compact'},{value:'standard',label:'Std'},{value:'relaxed',label:'Relaxed'}]}

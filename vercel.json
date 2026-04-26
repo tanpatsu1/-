@@ -10,7 +10,6 @@
     "api/fetch-meta.js": { "maxDuration": 15 }
   },
   "rewrites": [
-    { "source": "/brand",          "destination": "/brand.html" },
     { "source": "/login",          "destination": "/login.html" },
     { "source": "/reset-password", "destination": "/reset-password.html" }
   ]
