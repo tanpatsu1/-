@@ -25,6 +25,21 @@ function BrandsPage() {
   }, [brands]);
 
   const setFilter = (patch) => dispatch({ type: 'setBrandFilters', patch });
+  const toast = useToast();
+  const shareList = () => {
+    const lines = filtered.map(b => {
+      const genreNames = b.genres.map(id => state.genres.find(g => g.id === id)?.name).filter(Boolean);
+      return [b.name, priceSymbol(b.price), genreNames.join('・')].filter(Boolean).join('  ');
+    });
+    const text = `MISE ブランドリスト\n\n${lines.join('\n')}`;
+    if (navigator.share) {
+      navigator.share({ title: 'MISE ブランドリスト', text }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(text)
+        .then(() => toast.show('クリップボードにコピーしました'))
+        .catch(() => toast.show('コピーに失敗しました', { error: true }));
+    }
+  };
   const searchRef = React.useRef(null);
   React.useEffect(() => {
     const handler = (e) => {
@@ -50,6 +65,7 @@ function BrandsPage() {
             <button className={cx('view-btn', mode === 'grid' && 'is-active')} onClick={() => setFilter({ mode: 'grid' })} aria-label="カード表示">⊞</button>
             <button className={cx('view-btn', mode === 'list' && 'is-active')} onClick={() => setFilter({ mode: 'list' })} aria-label="リスト表示">☰</button>
           </div>
+          <button className="btn btn-secondary" onClick={shareList}>シェア</button>
           <Button variant="primary" onClick={() => dispatch({ type: 'openBrandModal', brand: null })}>＋ New brand</Button>
         </div>
       </div>
@@ -96,6 +112,13 @@ function BrandsPage() {
   );
 }
 
+function statusMini(products) {
+  const w = products.filter(p => p.status === 'wishlist').length;
+  const b = products.filter(p => p.status === 'purchased').length;
+  if (!w && !b) return null;
+  return <span className="brand-status-mini">★{w}&ensp;✓{b}</span>;
+}
+
 function BrandCard({ brand, products }) {
   const { dispatch } = useApp();
   return (
@@ -105,7 +128,7 @@ function BrandCard({ brand, products }) {
       </div>
       <div className="brand-card__body">
         <h2 className="brand-card__name">{brand.name}</h2>
-        <p className="brand-card__meta-line">{priceSymbol(brand.price)}&ensp;·&ensp;{products.length} items</p>
+        <p className="brand-card__meta-line">{priceSymbol(brand.price)}&ensp;·&ensp;{products.length} items{statusMini(products) && <>&ensp;·&ensp;{statusMini(products)}</>}</p>
       </div>
     </article>
   );
@@ -119,7 +142,7 @@ function BrandRow({ brand, products }) {
         <Swatch swatch={brand.swatch} initial={brand.initial || brand.name?.charAt(0).toUpperCase()} size="sm" />
       </div>
       <span className="brand-row__name">{brand.name}</span>
-      <span className="brand-row__meta-line">{priceSymbol(brand.price)}&ensp;·&ensp;{products.length} items</span>
+      <span className="brand-row__meta-line">{priceSymbol(brand.price)}&ensp;·&ensp;{products.length} items{statusMini(products) && <>&ensp;·&ensp;{statusMini(products)}</>}</span>
     </div>
   );
 }

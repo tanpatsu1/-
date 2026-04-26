@@ -21,6 +21,7 @@ const INITIAL = {
   brands:   window.SEED_BRANDS   || [],
   products: window.SEED_PRODUCTS || [],
   genres:   window.SEED_GENRES   || [],
+  budget: 0,
   brandFilters: { search: '', genre: 'all', tag: 'all', sort: 'name', mode: 'grid' },
   modal: null,
 };
@@ -77,6 +78,10 @@ function appReducer(state, action) {
       return { ...state, products: state.products.map(p => p.id === action.id ? { ...p, bookmarked: !p.bookmarked } : p) };
     case 'setStatus':
       return { ...state, products: state.products.map(p => p.id === action.id ? { ...p, status: action.status } : p) };
+    case 'setChecklist':
+      return { ...state, products: state.products.map(p => p.id === action.id ? { ...p, checklist: action.checklist } : p) };
+    case 'setBudget':
+      return { ...state, budget: action.budget };
     case 'addGenre': {
       const id = action.name.toLowerCase().replace(/\s+/g, '-') + '-' + Math.random().toString(36).slice(2, 6);
       return { ...state, genres: [...state.genres, { id, name: action.name }] };
@@ -90,13 +95,14 @@ function appReducer(state, action) {
         brands: state.brands.map(b => ({ ...b, genres: b.genres.filter(id => id !== action.id) })),
       };
     case 'importData':
-      return { ...state, brands: action.data.brands, products: action.data.products, genres: action.data.genres || state.genres };
+      return { ...state, brands: action.data.brands, products: action.data.products, genres: action.data.genres || state.genres, budget: action.data.budget ?? state.budget };
     case 'loadData':
       return {
         ...state,
         brands:   action.data.brands   || state.brands,
         products: action.data.products || state.products,
         genres:   action.data.genres   || state.genres,
+        budget:   action.data.budget   ?? state.budget,
       };
     default:
       return state;
@@ -228,7 +234,24 @@ function ProductModal({ modal, dispatch }) {
   const [status, setStatus] = useState(product?.status || 'wishlist');
   const [actedAt, setActedAt] = useState(product?.actedAt || new Date().toISOString().slice(0, 10));
   const [swatch, setSwatch] = useState(product?.swatch?.bg ? product.swatch : { bg: '#1F1E1B', fg: '#8A8780', style: 'mono' });
+  const [url, setUrl] = useState(product?.url || '');
+  const [imageUrl, setImageUrl] = useState(product?.imageUrl || '');
+  const [fetching, setFetching] = useState(false);
   const toast = useToast();
+  const fetchMeta = async () => {
+    if (!url.trim()) return;
+    setFetching(true);
+    try {
+      const res = await fetch('/api/fetch-meta', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url.trim() }) });
+      const meta = await res.json();
+      if (meta.title && !name.trim()) setName(meta.title);
+      if (meta.og_image_url) setImageUrl(meta.og_image_url);
+    } catch {
+      toast.show('取得に失敗しました', { error: true });
+    } finally {
+      setFetching(false);
+    }
+  };
   const save = () => {
     if (!name.trim()) { toast.show('商品名を入力してください', { error: true }); return; }
     dispatch({
@@ -239,8 +262,9 @@ function ProductModal({ modal, dispatch }) {
         price: Number(priceStr) || 0,
         tags: tags.split(',').map(t => t.trim()).filter(Boolean),
         status, bookmarked: product?.bookmarked || false,
-        swatch,
-        actedAt,
+        swatch, actedAt,
+        url: url.trim(), imageUrl: imageUrl.trim(),
+        checklist: product?.checklist || [false, false, false, false],
       },
     });
     toast.show(product ? `${name.trim()} を更新しました` : `${name.trim()} を追加しました`);
@@ -254,6 +278,13 @@ function ProductModal({ modal, dispatch }) {
             {state.brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select></div>
       )}
+      <div className="form-group">
+        <label className="form-label">商品URL <span className="opt">任意</span></label>
+        <div className="url-input-row">
+          <input className="form-input" type="url" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." />
+          <button type="button" className="btn btn-secondary btn-sm" onClick={fetchMeta} disabled={!url.trim() || fetching}>{fetching ? '…' : '取得'}</button>
+        </div>
+      </div>
       <div className="form-group"><label className="form-label">商品名 *</label>
         <input className="form-input" type="text" value={name} onChange={e => setName(e.target.value)} autoFocus /></div>
       <div className="form-group"><label className="form-label">カラー</label>
@@ -312,23 +343,24 @@ function OnboardingModal({ userId, onDone }) {
 }
 
 const BOTTOM_NAV = [
-  { view: 'brands',    label: 'Brands' },
-  { view: 'products',  label: 'Items' },
-  { view: 'timeline',  label: 'Timeline' },
-  { view: 'bookmarks', label: 'Saved' },
-  { view: 'settings',  label: 'Settings' },
+  { view: 'brands',    label: 'Brands',   icon: '◫' },
+  { view: 'products',  label: 'Items',    icon: '◈' },
+  { view: 'timeline',  label: 'Timeline', icon: '◷' },
+  { view: 'bookmarks', label: 'Saved',    icon: '♡' },
+  { view: 'settings',  label: 'Settings', icon: '⊙' },
 ];
 
 function BottomNav({ view, dispatch }) {
   return (
     <nav className="bottom-nav">
-      {BOTTOM_NAV.map(({ view: v, label }) => (
+      {BOTTOM_NAV.map(({ view: v, label, icon }) => (
         <button
           key={v}
           className={cx('bottom-nav__item', (view === v || (v === 'brands' && view === 'brand')) && 'is-active')}
           onClick={() => dispatch({ type: 'navigate', view: v })}
         >
-          {label}
+          <span className="bottom-nav__icon">{icon}</span>
+          <span className="bottom-nav__label">{label}</span>
         </button>
       ))}
     </nav>
@@ -392,11 +424,11 @@ function App({ user, supabase }) {
     saveRef.current = setTimeout(() => {
       supabase.from('user_data').upsert({
         user_id: user.id,
-        data: { brands: state.brands, products: state.products, genres: state.genres },
+        data: { brands: state.brands, products: state.products, genres: state.genres, budget: state.budget },
         updated_at: new Date().toISOString(),
       });
     }, 1000);
-  }, [state.brands, state.products, state.genres, loaded]);
+  }, [state.brands, state.products, state.genres, state.budget, loaded]);
 
   const renderPage = () => {
     switch (state.view) {

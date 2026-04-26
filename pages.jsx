@@ -1,3 +1,10 @@
+const CHECKLIST_QUESTIONS = [
+  '本当に必要ですか？',
+  '1週間後も欲しいですか？',
+  '予算内ですか？',
+  '手持ちとコーデできますか？',
+];
+
 function ProductCard({ product, showBrand }) {
   const { state, dispatch } = useApp();
   const toast = useToast();
@@ -24,7 +31,12 @@ function ProductCard({ product, showBrand }) {
       </button>
       <a onClick={e => { e.preventDefault(); dispatch({ type: 'openBrand', id: product.brandId }); }}>
         <div className="product-card__image">
-          <Swatch swatch={product.swatch} initial={brand?.initial || '?'} size="md" />
+          {product.imageUrl
+            ? <img src={product.imageUrl} alt={product.name} className="product-card__img"
+                onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
+            : null}
+          <Swatch swatch={product.swatch} initial={brand?.initial || '?'} size="md"
+            style={product.imageUrl ? { display: 'none' } : {}} />
         </div>
         <div className="product-card__body">
           {(showBrand && brand) && <p className="product-card__brand">{brand.name}</p>}
@@ -32,6 +44,24 @@ function ProductCard({ product, showBrand }) {
           <p className="product-card__price">{fmtYen(product.price)}</p>
           {product.tags.length > 0 && (
             <div className="tags-row">{product.tags.map(t => <Tag key={t}>{t}</Tag>)}</div>
+          )}
+          {product.status === 'considering' && (
+            <div className="checklist" onClick={e => e.stopPropagation()}>
+              {CHECKLIST_QUESTIONS.map((q, i) => {
+                const checked = (product.checklist || [])[i] || false;
+                return (
+                  <label key={i} className="checklist__item">
+                    <input type="checkbox" className="checklist__box" checked={checked}
+                      onChange={() => {
+                        const next = [...(product.checklist || [false, false, false, false])];
+                        next[i] = !next[i];
+                        dispatch({ type: 'setChecklist', id: product.id, checklist: next });
+                      }} />
+                    <span className="checklist__label">{q}</span>
+                  </label>
+                );
+              })}
+            </div>
           )}
           <div style={{ marginTop: 6 }}>
             <StatusBadge status={product.status} onClick={cycleStatus} interactive />
@@ -93,6 +123,9 @@ function ProductsPage() {
             <span>across {state.brands.length} brands</span>
           </p>
         </div>
+        <div className="section-header__right">
+          <Button variant="primary" onClick={() => dispatch({ type: 'openProductModal', brandId: null, product: null })}>＋ New item</Button>
+        </div>
       </div>
       <div className="search-sort-row">
         <input ref={searchRef} className="search-input" type="search" placeholder="Search items · brands…" value={search} onChange={e => setSearch(e.target.value)} />
@@ -123,6 +156,30 @@ function ProductsPage() {
       ) : (
         <div className="products-grid">{sorted.map(p => <ProductCard key={p.id} product={p} showBrand />)}</div>
       )}
+    </div>
+  );
+}
+
+function MonthlySpendChart({ products }) {
+  const purchased = products.filter(p => p.status === 'purchased' && p.actedAt && p.price);
+  if (!purchased.length) return null;
+  const now = new Date();
+  const months = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+    return { key: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`, label: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()], spend: 0 };
+  });
+  purchased.forEach(p => { const m = months.find(m => m.key === p.actedAt.slice(0,7)); if (m) m.spend += p.price; });
+  const max = Math.max(...months.map(m => m.spend), 1);
+  return (
+    <div className="spend-chart">
+      {months.map(m => (
+        <div key={m.key} className="spend-chart__col">
+          <div className="spend-chart__bar-wrap">
+            <div className="spend-chart__bar" style={{ height: `${Math.round(m.spend/max*100)}%` }} title={m.spend > 0 ? fmtYen(m.spend) : ''} />
+          </div>
+          <div className="spend-chart__label">{m.label}</div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -189,6 +246,27 @@ function TimelinePage() {
           </div>
         </div>
       </div>
+      {(() => {
+        if (!state.budget) return null;
+        const nowYM = new Date().toISOString().slice(0, 7);
+        const spent = state.products
+          .filter(p => p.status === 'purchased' && p.actedAt?.startsWith(nowYM))
+          .reduce((s, p) => s + (p.price || 0), 0);
+        const pct = Math.min(100, Math.round(spent / state.budget * 100));
+        const over = spent > state.budget;
+        return (
+          <div className="budget-bar-wrap">
+            <div className="budget-bar__labels">
+              <span>{fmtYen(spent)} <span className="sub-sep">/</span> {fmtYen(state.budget)}</span>
+              <span className={cx('budget-bar__pct', over && 'is-over')}>{pct}%</span>
+            </div>
+            <div className="budget-bar__track">
+              <div className={cx('budget-bar__fill', over && 'is-over')} style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        );
+      })()}
+      <MonthlySpendChart products={state.products} />
       {items.length === 0 ? (
         <EmptyState icon="◯" title="No entries" text="Adjust the filter to see items." />
       ) : (
@@ -309,6 +387,16 @@ function SettingsPage() {
         <div>
           <h1 className="section-title"><em>Settings</em><span className="dot">.</span></h1>
           <p className="section-sub"><span>Genres · Account</span></p>
+        </div>
+      </div>
+      <div className="settings-section">
+        <h2 className="settings-section-title">月間予算</h2>
+        <p className="settings-section-desc">購入合計と比較するための月間予算を設定します。</p>
+        <div className="url-input-row">
+          <input className="form-input" type="number" min="0" step="1000"
+            value={state.budget || ''} placeholder="例: 50000"
+            onChange={e => dispatch({ type: 'setBudget', budget: Number(e.target.value) || 0 })} />
+          <span className="settings-budget-unit">円 / 月</span>
         </div>
       </div>
       <div className="settings-section">
