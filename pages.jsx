@@ -405,17 +405,89 @@ function SettingsPage() {
       </div>
       <div className="settings-section" style={{ marginTop: 24 }}>
         <h2 className="settings-section-title">使い方</h2>
-        {[
-          ['ブランドを追加するには？', 'Brands ページ右上の「＋ New brand」からブランドを登録します。カラー・価格帯・タグを設定できます。'],
-          ['アイテムを登録するには？', 'ブランド詳細ページの「＋ Add item」からアイテムを追加します。ステータス（ほしい・検討中・購入済み）で管理できます。'],
-          ['タイムラインの見方', 'Timeline ではアイテムを時系列で一覧できます。フィルタで絞り込み、購入総額も確認できます。'],
-          ['データのバックアップ', 'Settings › バックアップ から JSON でエクスポート・インポートができます。'],
-        ].map(([q, a]) => (
-          <details key={q} className="help-item">
-            <summary className="help-item__q">{q}</summary>
-            <p className="help-item__a">{a}</p>
-          </details>
-        ))}
+        <p className="settings-section-desc">MISE の機能と基本操作をまとめたマニュアルです。</p>
+
+        <details className="help-item">
+          <summary className="help-item__q">3ステップではじめる</summary>
+          <div className="help-item__body">
+            <div className="help-steps">
+              <div className="help-step">
+                <span className="help-step__num">1</span>
+                <div><b>ブランドを登録</b> — Brands タブ右上の「＋ New brand」を押します。公式 URL を貼り付けて「取得」を押すとブランド名・説明が自動入力されます。カラー・ジャンル・価格帯・タグを設定して保存してください。</div>
+              </div>
+              <div className="help-step">
+                <span className="help-step__num">2</span>
+                <div><b>アイテムを追加</b> — ブランド詳細ページの「＋ Add item」からアイテムを登録します。商品名・価格・ステータス（★ほしい・？検討中・✓購入済み）・日付を設定できます。</div>
+              </div>
+              <div className="help-step">
+                <span className="help-step__num">3</span>
+                <div><b>記録を活用</b> — Timeline で購入履歴と累計金額を確認。♡ をつけたアイテムは Saved タブにまとめて表示されます。</div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details className="help-item">
+          <summary className="help-item__q">基本操作：追加・編集・削除・検索</summary>
+          <div className="help-item__body">
+            <div className="help-def">
+              <div className="help-def-row"><span className="help-def-key">ブランド追加</span><span className="help-def-val">Brands ページ右上「＋ New brand」。URL 入力後に「取得」を押すとサイト名・説明を自動入力できます。</span></div>
+              <div className="help-def-row"><span className="help-def-key">ブランド編集</span><span className="help-def-val">ブランド詳細ページの「編集」ボタン。削除直後に表示されるトースト通知の「元に戻す」で復元できます。</span></div>
+              <div className="help-def-row"><span className="help-def-key">アイテム追加</span><span className="help-def-val">ブランド詳細ページの「＋ Add item」から登録します。</span></div>
+              <div className="help-def-row"><span className="help-def-key">ステータス変更</span><span className="help-def-val">アイテムカードのステータスバッジをタップするたびに「ほしい → 検討中 → 購入済み」と順に切り替わります。</span></div>
+              <div className="help-def-row"><span className="help-def-key">検索</span><span className="help-def-val">各ページの検索バーに入力。⌘K（Mac）または Ctrl+K（Windows）で検索バーへ素早くフォーカスできます。</span></div>
+              <div className="help-def-row"><span className="help-def-key">フィルタ</span><span className="help-def-val">ジャンル・タグ・ステータスのチップを押して絞り込みます。ソートはプルダウンから選択。</span></div>
+            </div>
+          </div>
+        </details>
+
+        <details className="help-item">
+          <summary className="help-item__q">ブランドカードの見方・整理のポイント</summary>
+          <div className="help-item__body">
+            <p className="help-prose">カードはカラースウォッチ・ブランド名・価格帯（¥）・アイテム数で構成されています。</p>
+            <div className="help-def">
+              <div className="help-def-row"><span className="help-def-key">スウォッチ</span><span className="help-def-val">ブランドのイメージカラー。16色のプリセットから選び、mono（グラデ）・paper（柔らか）・bold（フラット）の 3 スタイルから選択できます。</span></div>
+              <div className="help-def-row"><span className="help-def-key">価格帯</span><span className="help-def-val">¥＝プチプライス、¥¥＝ミドル、¥¥¥＝プレミアム、¥¥¥¥＝ラグジュアリー。ソートや価格フィルタに活用できます。</span></div>
+              <div className="help-def-row"><span className="help-def-key">表示切替</span><span className="help-def-val">Brands 右上の ⊞（グリッド）/ ☰（リスト）で切り替え。リスト表示はブランド数が多いときにスキャンしやすくなります。</span></div>
+              <div className="help-def-row"><span className="help-def-key">整理のコツ</span><span className="help-def-val">ジャンルで大まかに分類し、タグで素材・カテゴリなど細かいキーワードを追加すると、フィルタの組み合わせで素早く目的のブランドへたどり着けます。</span></div>
+            </div>
+          </div>
+        </details>
+
+        <details className="help-item">
+          <summary className="help-item__q">タグ・ジャンル・価格帯の違い</summary>
+          <div className="help-item__body">
+            <div className="help-def">
+              <div className="help-def-row"><span className="help-def-key">ジャンル</span><span className="help-def-val">ブランドのスタイル系統（例：ミニマル、ストリート、ヴィンテージ）。Settings で追加・編集・削除でき、ブランドに複数付与できます。Brands ページのメインフィルタとして機能します。</span></div>
+              <div className="help-def-row"><span className="help-def-key">タグ</span><span className="help-def-val">ブランド・アイテム両方に付けられる自由なキーワード（例：アウター、ニット、デニム）。カンマ区切りで複数入力でき、入力中にオートコンプリートが表示されます。ジャンルより細かい分類に使います。</span></div>
+              <div className="help-def-row"><span className="help-def-key">価格帯</span><span className="help-def-val">ブランド全体の価格感を ¥〜¥¥¥¥ の 4 段階で表します。「価格目安」欄に「¥15,000〜¥80,000」などの具体的な金額も記録できます。</span></div>
+            </div>
+          </div>
+        </details>
+
+        <details className="help-item">
+          <summary className="help-item__q">タイムラインの活用方法</summary>
+          <div className="help-item__body">
+            <ul className="help-list">
+              <li>アイテムに設定した「日付」をもとに、年・月ごとにグループ表示されます。</li>
+              <li>上部フィルタの「Purchased」に切り替えると購入済みアイテムだけに絞り込まれ、ボタンに累計金額が表示されます。</li>
+              <li>各行をクリックするとそのブランドの詳細ページへ移動できます。</li>
+              <li>左端のドット（● 購入済み・○ ほしい・◎ 検討中）でステータスが一目でわかります。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details className="help-item">
+          <summary className="help-item__q">データのバックアップ・引き継ぎ</summary>
+          <div className="help-item__body">
+            <ul className="help-list">
+              <li>Settings › バックアップ の「↓ エクスポート」で全データを JSON ファイルとして保存できます。</li>
+              <li>「↑ インポート」で保存した JSON を読み込み、別のブラウザや端末に引き継げます。</li>
+              <li>サインイン中はデータが Supabase クラウドに自動保存されます（変更後 1 秒で同期）。</li>
+              <li>定期的にエクスポートしておくと万が一のときも安心です。</li>
+            </ul>
+          </div>
+        </details>
       </div>
     </div>
   );

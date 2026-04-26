@@ -673,3 +673,26 @@ html[data-theme="dark"] .form-select {
 .help-item__q::after { content: '+'; font-size: 16px; color: var(--text-muted); flex-shrink: 0; transition: transform var(--t); }
 details[open] .help-item__q::after { transform: rotate(45deg); }
 .help-item__a { font-size: 13px; color: var(--text-secondary); line-height: 1.7; padding: 0 0 14px; }
+
+/* ─── Help manual rich content ─── */
+.help-item__body { padding: 2px 0 18px; display: flex; flex-direction: column; gap: 12px; }
+.help-prose { font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin: 0; }
+
+.help-steps { display: flex; flex-direction: column; gap: 14px; }
+.help-step { display: flex; gap: 12px; align-items: flex-start; }
+.help-step__num {
+  display: flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; min-width: 20px;
+  border-radius: 50%; background: var(--accent); color: var(--accent-fg);
+  font-size: 10px; font-weight: 700; margin-top: 2px;
+}
+.help-step > div { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
+
+.help-def { display: flex; flex-direction: column; gap: 10px; }
+.help-def-row { display: flex; gap: 14px; }
+.help-def-key { min-width: 78px; font-size: 12px; font-weight: 600; color: var(--text-primary); flex-shrink: 0; padding-top: 2px; letter-spacing: 0.01em; }
+.help-def-val { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
+
+.help-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.help-list li { display: flex; gap: 10px; font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+.help-list li::before { content: '—'; color: var(--text-light); flex-shrink: 0; }
