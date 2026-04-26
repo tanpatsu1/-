@@ -8,13 +8,13 @@ function AuthGate({ children }) {
       });
       sb.auth.onAuthStateChange((_e, session) => {
         const user = session?.user ?? null;
-        setAuthState(s => ({ ...s, user }));
+        setAuthState(s => ({ sb: s.sb || sb, user }));
         if (!user) window.location.href = '/login';
       });
     });
   }, []);
 
-  if (authState.user === undefined) {
+  if (authState.user === undefined || !authState.sb) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--text-muted)', fontSize: '13px', letterSpacing: '0.08em' }}>
         MISE
