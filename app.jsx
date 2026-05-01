@@ -399,14 +399,19 @@ function App({ user, supabase }) {
   }, [state.brands, state.products, state.genres, loaded]);
 
   const renderPage = () => {
-    switch (state.view) {
-      case 'brand':     return <BrandDetail brandId={state.activeBrandId} />;
-      case 'products':  return <ProductsPage />;
-      case 'timeline':  return <TimelinePage />;
-      case 'bookmarks': return <BookmarksPage />;
-      case 'settings':  return <SettingsPage />;
-      default:          return <BrandsPage />;
-    }
+    const view = state.view;
+    const result = (() => {
+      switch (view) {
+        case 'brand':     return <BrandDetail brandId={state.activeBrandId} />;
+        case 'products':  return <ProductsPage />;
+        case 'timeline':  return <TimelinePage />;
+        case 'bookmarks': return <BookmarksPage />;
+        case 'settings':  return <SettingsPage />;
+        default:          return <BrandsPage />;
+      }
+    })();
+    console.log('[renderPage] view:', view, 'activeBrandId:', state.activeBrandId, 'returned:', result?.type?.name || 'null');
+    return result;
   };
 
   return (
@@ -414,10 +419,15 @@ function App({ user, supabase }) {
       <AppCtx.Provider value={{ state, dispatch }}>
         <ToastProvider>
           <Header view={state.view} dispatch={dispatch} />
-          <div className="main-container">
-            {loaded ? renderPage() : (
+          <div className="main-container" data-loaded={loaded} style={{ opacity: loaded ? 1 : 0.5 }}>
+            {loaded ? (
+              <>
+                {console.log('[render] main-container: loaded=true, view:', state.view)}
+                {renderPage()}
+              </>
+            ) : (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40vh', color: 'var(--text-muted)', fontSize: '13px', letterSpacing: '0.06em' }}>
-                …
+                MISE 読み込み中…
               </div>
             )}
           </div>

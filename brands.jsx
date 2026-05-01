@@ -98,8 +98,12 @@ function BrandsPage() {
 
 function BrandCard({ brand, products }) {
   const { dispatch } = useApp();
+  const handleClick = () => {
+    console.log('[BrandCard] clicked on', brand.id, brand.name);
+    dispatch({ type: 'openBrand', id: brand.id });
+  };
   return (
-    <article className="brand-card" onClick={() => dispatch({ type: 'openBrand', id: brand.id })}>
+    <article className="brand-card" onClick={handleClick}>
       <div className="brand-card__image">
         <Swatch swatch={brand.swatch} initial={brand.initial || brand.name?.charAt(0).toUpperCase()} size="md" />
       </div>
@@ -130,7 +134,11 @@ function BrandDetail({ brandId }) {
   const brand = state.brands.find(b => b.id === brandId);
   const [productSearch, setProductSearch] = useState('');
   const [productTag, setProductTag] = useState('all');
-  if (!brand) return <EmptyState icon="◯" title="ブランドが見つかりません" text="削除されたか、存在しないブランドです。" action={<Button variant="primary" onClick={() => dispatch({ type: 'navigate', view: 'brands' })}>ブランド一覧へ</Button>} />;
+  console.log('[BrandDetail] brandId:', brandId, 'found:', !!brand, 'brandsCount:', state.brands.length);
+  if (!brand) {
+    console.log('[BrandDetail] brand is null/undefined, showing empty state');
+    return <EmptyState icon="◯" title="ブランドが見つかりません" text="削除されたか、存在しないブランドです。" action={<Button variant="primary" onClick={() => dispatch({ type: 'navigate', view: 'brands' })}>ブランド一覧へ</Button>} />;
+  }
   const genreNames = brand.genres.map(id => state.genres.find(g => g.id === id)?.name).filter(Boolean);
   const brandProducts = state.products.filter(p => p.brandId === brand.id);
   const tagOpts = Array.from(new Set(brandProducts.flatMap(p => p.tags)));
