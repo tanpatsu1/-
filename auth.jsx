@@ -8,7 +8,7 @@ function AuthGate({ children }) {
       });
       sb.auth.onAuthStateChange((_e, session) => {
         const user = session?.user ?? null;
-        setAuthState(s => ({ ...s, user }));
+        setAuthState(s => ({ ...s, user, sb }));
         if (!user) window.location.href = '/login';
       });
     }).catch(err => {
