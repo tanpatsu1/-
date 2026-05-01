@@ -3,7 +3,15 @@ let _client = null;
 
 async function _initClient() {
   if (_client) return _client;
-  const cfg = await fetch('/api/config').then(r => r.json());
+  let cfg;
+  try {
+    cfg = await fetch('/api/config').then(r => r.json());
+  } catch (e) {
+    throw new Error('設定の取得に失敗しました (/api/config)');
+  }
+  if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) {
+    throw new Error('Supabase環境変数が未設定です (SUPABASE_URL / SUPABASE_ANON_KEY)');
+  }
   _client = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
     auth: { autoRefreshToken: true, persistSession: true },
   });
